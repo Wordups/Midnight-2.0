@@ -2,216 +2,1437 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
 <title>Midnight — Policy Migration Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-body {
-  margin: 0;
-  font-family: Segoe UI, sans-serif;
-  background: #020916;
-  color: white;
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#03080f;
+  --s1:#080f1a;
+  --s2:#0c1524;
+  --s3:#111d30;
+  --b0:rgba(255,255,255,0.06);
+  --b1:rgba(255,255,255,0.10);
+  --b2:rgba(255,255,255,0.18);
+  --t0:#ffffff;
+  --t1:#e2eaf5;
+  --t2:#8a9bb5;
+  --t3:#4c607a;
+  --cyan:#00c3e3;
+  --cyan-bg:rgba(0,195,227,0.08);
+  --cyan-bd:rgba(0,195,227,0.22);
+  --orange:#fa5a28;
+  --green:#00d68f;
+  --green-bg:rgba(0,214,143,0.08);
+  --green-bd:rgba(0,214,143,0.25);
+  --red-bg:rgba(250,90,40,0.08);
+  --red-bd:rgba(250,90,40,0.25);
+  --nav-h:58px;
 }
-.container {
-  max-width: 900px;
-  margin: 80px auto;
-  padding: 40px;
+
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--t1);
+  min-height:100vh;
+  overflow-x:hidden;
 }
-h1 {
-  font-size: 48px;
-  margin-bottom: 10px;
+
+/* ── NAV ─────────────────────────────────────────────────────────────────── */
+nav{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:var(--nav-h);
+  z-index:200;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 2.5rem;
+  background:rgba(3,8,15,0.88);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--b0);
 }
-.subtitle {
-  color: #9fb3d1;
-  margin-bottom: 40px;
+
+.nav-left{display:flex;align-items:center;gap:2.5rem}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo{
+  width:28px;height:28px;
+  background:var(--cyan);
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
 }
-.card {
-  background: #071122;
-  padding: 30px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
+.nav-logo svg{width:14px;height:14px}
+.nav-name{
+  font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:700;
+  letter-spacing:0.08em;
+  color:var(--t0);
+  text-transform:uppercase;
 }
-label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 13px;
-  color: #8fa4c5;
+
+.nav-links{display:flex;align-items:center;gap:0.25rem}
+.nav-link{
+  padding:6px 14px;
+  border-radius:6px;
+  font-size:13px;font-weight:500;
+  color:var(--t2);
+  text-decoration:none;
+  cursor:pointer;
+  transition:all .15s ease;
+  border:none;background:none;
+  letter-spacing:0.01em;
 }
-input, select {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 20px;
-  background: #0c1830;
-  border: 1px solid rgba(255,255,255,0.1);
-  color: white;
-  border-radius: 6px;
+.nav-link:hover{color:var(--t0);background:rgba(255,255,255,0.05)}
+.nav-link.active{color:var(--t0);background:rgba(255,255,255,0.07)}
+
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-badge{
+  font-family:'DM Mono',monospace;
+  font-size:10px;letter-spacing:0.16em;
+  color:var(--t3);text-transform:uppercase;
+  padding:4px 10px;
+  border:1px solid var(--b0);
+  border-radius:4px;
 }
-button {
-  padding: 12px 20px;
-  margin-right: 10px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+.nav-cta{
+  background:var(--cyan);color:#000;
+  border:none;border-radius:6px;
+  padding:7px 16px;
+  font-size:13px;font-weight:600;
+  cursor:pointer;transition:opacity .15s;
+  text-decoration:none;
+  display:inline-block;
 }
-.primary {
-  background: #00c3e3;
-  color: black;
+.nav-cta:hover{opacity:0.85}
+
+/* ── PAGES ───────────────────────────────────────────────────────────────── */
+.page{display:none;min-height:100vh;padding-top:var(--nav-h)}
+.page.active{display:block}
+
+/* ── HOME PAGE ───────────────────────────────────────────────────────────── */
+.home-hero{
+  min-height:calc(100vh - var(--nav-h));
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:60px 2rem 80px;
+  position:relative;overflow:hidden;
+  text-align:center;
 }
-.secondary {
-  background: #1b2a4a;
-  color: white;
+.home-hero::before{
+  content:'';position:absolute;
+  top:-20%;left:50%;transform:translateX(-50%);
+  width:900px;height:600px;
+  background:radial-gradient(ellipse,rgba(0,195,227,0.07),transparent 65%);
+  pointer-events:none;
 }
-#status {
-  margin-top: 15px;
-  font-size: 13px;
-  color: #8fa4c5;
+
+.hero-eyebrow{
+  font-family:'DM Mono',monospace;
+  font-size:11px;letter-spacing:0.26em;
+  color:var(--cyan);text-transform:uppercase;
+  margin-bottom:20px;
+  opacity:0;animation:fadeUp .8s ease .1s forwards;
 }
-pre {
-  background: #01060f;
-  padding: 20px;
-  margin-top: 20px;
-  max-height: 400px;
-  overflow: auto;
-  color: #dce6f5;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px;
-  white-space: pre-wrap;
-  word-break: break-word;
+.hero-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(56px,9vw,108px);
+  font-weight:800;letter-spacing:0.04em;
+  color:var(--t0);line-height:0.95;
+  text-transform:uppercase;
+  margin-bottom:20px;
+  opacity:0;animation:fadeUp .9s ease .2s forwards;
+}
+.hero-title .hl{color:var(--cyan)}
+.hero-sub{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(14px,1.8vw,18px);
+  font-weight:400;letter-spacing:0.1em;
+  color:var(--t2);text-transform:uppercase;
+  margin-bottom:14px;
+  opacity:0;animation:fadeUp .9s ease .3s forwards;
+}
+.hero-body{
+  font-size:16px;color:var(--t2);
+  max-width:520px;line-height:1.7;
+  font-weight:300;margin-bottom:36px;
+  opacity:0;animation:fadeUp .9s ease .4s forwards;
+}
+.hero-btns{
+  display:flex;gap:12px;justify-content:center;
+  margin-bottom:70px;
+  opacity:0;animation:fadeUp .9s ease .5s forwards;
+}
+.btn-primary{
+  background:var(--cyan);color:#000;
+  border:none;border-radius:8px;
+  padding:12px 28px;font-size:14px;font-weight:600;
+  cursor:pointer;letter-spacing:0.02em;
+  transition:all .2s;text-decoration:none;display:inline-block;
+}
+.btn-primary:hover{opacity:0.85;transform:translateY(-1px)}
+.btn-ghost{
+  background:transparent;color:var(--t1);
+  border:1px solid var(--b1);border-radius:8px;
+  padding:12px 28px;font-size:14px;font-weight:500;
+  cursor:pointer;transition:all .2s;
+  text-decoration:none;display:inline-block;
+}
+.btn-ghost:hover{border-color:var(--b2);transform:translateY(-1px)}
+
+/* Product grid — Apple style */
+.product-grid{
+  width:100%;max-width:900px;
+  opacity:0;animation:fadeUp 1s ease .6s forwards;
+}
+.product-items{
+  display:flex;justify-content:center;
+  gap:0;flex-wrap:nowrap;
+  border-top:1px solid var(--b0);
+  border-bottom:1px solid var(--b0);
+}
+.product-item{
+  display:flex;flex-direction:column;align-items:center;
+  padding:28px 24px;gap:12px;
+  cursor:pointer;transition:background .2s;
+  border-right:1px solid var(--b0);flex:1;
+  text-decoration:none;
+}
+.product-item:last-child{border-right:none}
+.product-item:hover{background:rgba(255,255,255,0.03)}
+.product-icon{
+  width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;
+}
+.product-icon svg{width:32px;height:32px}
+.product-label{
+  font-size:12px;color:var(--t2);
+  letter-spacing:0.02em;text-align:center;
+}
+
+/* Video */
+.home-video-section{
+  padding:80px 2rem;
+  display:flex;flex-direction:column;
+  align-items:center;
+  background:var(--s1);
+  border-top:1px solid var(--b0);
+  border-bottom:1px solid var(--b0);
+}
+.video-frame{
+  width:100%;max-width:840px;
+  border-radius:14px;overflow:hidden;
+  border:1px solid var(--b1);
+  box-shadow:0 40px 80px rgba(0,0,0,.5),0 0 60px rgba(0,195,227,0.06);
+  aspect-ratio:16/9;position:relative;
+}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.vid-thumb{
+  position:absolute;inset:0;cursor:pointer;
+  background:#0a1628;
+  background-image:url('https://img.youtube.com/vi/VfihA9MtqrA/maxresdefault.jpg');
+  background-size:cover;background-position:center;
+}
+.vid-overlay{
+  position:absolute;inset:0;
+  background:rgba(3,8,15,0.35);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
+}
+.vid-play{
+  width:68px;height:68px;border-radius:50%;
+  background:var(--cyan);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 8px rgba(0,195,227,0.14);
+  transition:transform .2s,box-shadow .2s;
+}
+.vid-play:hover{transform:scale(1.08);box-shadow:0 0 0 14px rgba(0,195,227,0.18)}
+.vid-play svg{width:22px;height:22px;margin-left:3px}
+.vid-label-txt{
+  font-family:'DM Mono',monospace;
+  font-size:11px;letter-spacing:0.2em;
+  color:rgba(255,255,255,0.6);text-transform:uppercase;
+}
+
+/* Features — 3 col */
+.home-features{
+  padding:90px 4rem;
+  max-width:1280px;margin:0 auto;
+}
+.section-eyebrow{
+  font-family:'DM Mono',monospace;
+  font-size:10px;letter-spacing:0.26em;
+  color:var(--cyan);text-transform:uppercase;
+  margin-bottom:14px;
+}
+.section-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(26px,3.5vw,38px);
+  font-weight:700;color:var(--t0);
+  line-height:1.15;margin-bottom:10px;
+  letter-spacing:-0.01em;
+}
+.section-sub{
+  font-size:15px;color:var(--t2);
+  max-width:520px;font-weight:300;
+  margin-bottom:48px;line-height:1.7;
+}
+.feat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+}
+.feat-card{
+  background:var(--s1);border:1px solid var(--b0);
+  border-radius:12px;padding:24px;
+  transition:border-color .2s,transform .2s;
+}
+.feat-card:hover{border-color:var(--b1);transform:translateY(-2px)}
+.feat-num{
+  font-family:'DM Mono',monospace;
+  font-size:11px;color:var(--cyan);
+  letter-spacing:0.1em;margin-bottom:12px;
+}
+.feat-title{
+  font-family:'Syne',sans-serif;
+  font-size:16px;font-weight:600;
+  color:var(--t0);margin-bottom:8px;
+}
+.feat-body{font-size:13px;color:var(--t2);line-height:1.65;font-weight:300}
+
+/* Stats */
+.home-stats{
+  background:var(--s1);
+  border-top:1px solid var(--b0);
+  border-bottom:1px solid var(--b0);
+  padding:70px 4rem;
+}
+.stats-inner{
+  max-width:1280px;margin:0 auto;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+}
+.stat-card{
+  background:var(--bg);border:1px solid var(--b0);
+  border-radius:12px;padding:24px;text-align:center;
+}
+.stat-num{
+  font-family:'Syne',sans-serif;
+  font-size:38px;font-weight:800;
+  color:var(--cyan);line-height:1;margin-bottom:8px;
+}
+.stat-lbl{font-size:12px;color:var(--t2);line-height:1.5;font-weight:300}
+
+/* ── MIGRATE PAGE ─────────────────────────────────────────────────────────── */
+.migrate-wrap{
+  max-width:1100px;margin:0 auto;
+  padding:48px 2.5rem 80px;
+}
+.page-header{margin-bottom:36px}
+.page-title{
+  font-family:'Syne',sans-serif;
+  font-size:32px;font-weight:700;
+  color:var(--t0);margin-bottom:6px;
+}
+.page-sub{font-size:14px;color:var(--t2);font-weight:300}
+
+.migrate-grid{
+  display:grid;grid-template-columns:0.42fr 0.58fr;
+  gap:20px;align-items:start;
+}
+
+.panel{
+  background:var(--s1);border:1px solid var(--b0);
+  border-radius:14px;padding:24px;
+}
+.panel-title{
+  font-size:13px;font-weight:600;color:var(--t0);
+  letter-spacing:0.04em;margin-bottom:18px;
+  text-transform:uppercase;
+  font-family:'DM Mono',monospace;
+}
+
+/* Form elements */
+.field{margin-bottom:18px}
+.field-label{
+  font-size:11px;letter-spacing:0.14em;
+  color:var(--t3);text-transform:uppercase;
+  font-family:'DM Mono',monospace;
+  margin-bottom:7px;display:block;
+}
+.field input[type="file"],
+.field select{
+  width:100%;padding:10px 12px;
+  background:var(--s2);
+  border:1px solid var(--b0);
+  border-radius:8px;color:var(--t1);
+  font-size:13px;font-family:'Inter',sans-serif;
+  transition:border-color .2s;cursor:pointer;
+}
+.field input[type="file"]:hover,
+.field select:hover{border-color:var(--b1)}
+.field input[type="file"]:focus,
+.field select:focus{outline:none;border-color:var(--cyan)}
+
+.field-note{
+  font-size:11px;color:var(--t3);
+  margin-top:5px;line-height:1.5;
+}
+
+/* Step indicator */
+.steps{
+  display:flex;align-items:center;
+  gap:0;margin-bottom:28px;
+}
+.step{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--t3);
+  font-family:'DM Mono',monospace;
+  letter-spacing:0.06em;
+}
+.step.active{color:var(--cyan)}
+.step.done{color:var(--green)}
+.step-dot{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--s2);border:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;
+  flex-shrink:0;
+}
+.step.active .step-dot{background:var(--cyan-bg);border-color:var(--cyan);color:var(--cyan)}
+.step.done .step-dot{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.step-line{flex:1;height:1px;background:var(--b0);margin:0 8px;min-width:20px}
+
+/* Action buttons */
+.action-btn{
+  width:100%;padding:11px;
+  border:none;border-radius:8px;
+  font-size:14px;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  letter-spacing:0.02em;
+  margin-bottom:10px;
+}
+.action-primary{background:var(--cyan);color:#000}
+.action-primary:hover{opacity:0.87;transform:translateY(-1px)}
+.action-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.action-secondary{
+  background:var(--s2);color:var(--t1);
+  border:1px solid var(--b1);
+}
+.action-secondary:hover{border-color:var(--b2)}
+.action-secondary:disabled{opacity:0.4;cursor:not-allowed}
+
+/* Progress */
+.progress-wrap{display:none;margin-bottom:14px}
+.progress-track{
+  height:2px;background:var(--b0);
+  border-radius:2px;overflow:hidden;margin-bottom:8px;
+}
+.progress-fill{
+  height:100%;width:0%;
+  background:var(--cyan);
+  transition:width .4s ease;
+}
+.progress-label{
+  font-size:11px;color:var(--t3);
+  font-family:'DM Mono',monospace;letter-spacing:0.06em;
+}
+
+/* Alerts */
+.alert{
+  border-radius:8px;padding:12px 14px;
+  font-size:13px;margin-bottom:14px;display:none;
+  line-height:1.5;
+}
+.alert-success{background:var(--green-bg);border:1px solid var(--green-bd);color:#4df0b8}
+.alert-error{background:var(--red-bg);border:1px solid var(--red-bd);color:#ff8a6a}
+.alert-info{background:var(--cyan-bg);border:1px solid var(--cyan-bd);color:var(--cyan)}
+
+/* Preview pane */
+.preview-pane{
+  background:var(--s2);border:1px solid var(--b0);
+  border-radius:10px;padding:20px;
+  max-height:460px;overflow-y:auto;
+}
+.preview-empty{
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  min-height:280px;gap:12px;
+  color:var(--t3);font-size:13px;text-align:center;
+}
+.preview-empty-icon{
+  width:44px;height:44px;
+  border:1px solid var(--b0);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--t3);
+}
+.preview-field{margin-bottom:16px}
+.preview-field-label{
+  font-size:10px;letter-spacing:0.16em;
+  color:var(--t3);text-transform:uppercase;
+  font-family:'DM Mono',monospace;margin-bottom:4px;
+}
+.preview-field-value{font-size:13px;color:var(--t1);line-height:1.6}
+.preview-divider{height:1px;background:var(--b0);margin:14px 0}
+.preview-tag{
+  display:inline-block;
+  background:var(--cyan-bg);border:1px solid var(--cyan-bd);
+  color:var(--cyan);border-radius:4px;
+  padding:2px 8px;font-size:11px;
+  font-family:'DM Mono',monospace;
+  letter-spacing:0.06em;margin-right:6px;margin-bottom:6px;
+}
+
+/* ── CREATE PAGE ──────────────────────────────────────────────────────────── */
+.create-wrap{
+  max-width:1100px;margin:0 auto;
+  padding:48px 2.5rem 80px;
+}
+.create-grid{
+  display:grid;grid-template-columns:0.42fr 0.58fr;
+  gap:20px;align-items:start;
+}
+
+.form-section-title{
+  font-size:11px;letter-spacing:0.14em;
+  color:var(--cyan);text-transform:uppercase;
+  font-family:'DM Mono',monospace;
+  margin-bottom:14px;margin-top:20px;
+}
+.form-section-title:first-child{margin-top:0}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.text-input{
+  width:100%;padding:10px 12px;
+  background:var(--s2);border:1px solid var(--b0);
+  border-radius:8px;color:var(--t1);
+  font-size:13px;font-family:'Inter',sans-serif;
+  transition:border-color .2s;
+}
+.text-input:focus{outline:none;border-color:var(--cyan);background:var(--s3)}
+.text-input::placeholder{color:var(--t3)}
+
+.text-area{
+  width:100%;padding:10px 12px;
+  background:var(--s2);border:1px solid var(--b0);
+  border-radius:8px;color:var(--t1);
+  font-size:13px;font-family:'Inter',sans-serif;
+  transition:border-color .2s;resize:vertical;
+  min-height:90px;
+}
+.text-area:focus{outline:none;border-color:var(--cyan);background:var(--s3)}
+.text-area::placeholder{color:var(--t3)}
+
+/* Defaults chip */
+.defaults-chip{
+  background:var(--s2);border:1px solid var(--b0);
+  border-radius:8px;padding:12px 14px;
+  font-size:12px;color:var(--t2);
+  line-height:1.8;margin-bottom:16px;
+}
+.defaults-chip strong{color:var(--t1)}
+
+/* ── FOOTER ───────────────────────────────────────────────────────────────── */
+footer{
+  border-top:1px solid var(--b0);
+  padding:28px 2.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.footer-brand{
+  font-family:'Syne',sans-serif;
+  font-size:12px;font-weight:600;
+  color:var(--t3);letter-spacing:0.1em;text-transform:uppercase;
+}
+.footer-links{display:flex;gap:1.5rem}
+.footer-links a{
+  font-size:12px;color:var(--t3);text-decoration:none;
+  transition:color .2s;
+}
+.footer-links a:hover{color:var(--t1)}
+.footer-copy{
+  font-family:'DM Mono',monospace;
+  font-size:11px;color:var(--t3);letter-spacing:0.06em;
+}
+
+/* ── ANIMATIONS ───────────────────────────────────────────────────────────── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.animate-in{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.animate-in.visible{opacity:1;transform:translateY(0)}
+
+/* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
+@media(max-width:860px){
+  .migrate-grid,.create-grid,.form-row{grid-template-columns:1fr}
+  .feat-grid{grid-template-columns:1fr}
+  .stats-inner{grid-template-columns:repeat(2,1fr)}
+  .product-items{flex-wrap:wrap}
+  .home-features,.home-stats{padding:60px 1.5rem}
+  nav{padding:0 1.25rem}
+  .nav-links{display:none}
+  .nav-badge{display:none}
+  .migrate-wrap,.create-wrap{padding:32px 1.25rem 60px}
 }
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>Midnight</h1>
-  <div class="subtitle">Policy Migration Engine — by Takeoff</div>
-  <div class="card">
-    <label>Legacy Policy File</label>
-    <input type="file" id="file">
 
-    <label>Logo (optional)</label>
-    <input type="file" id="logo">
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-left">
+    <a class="nav-brand" onclick="goTo('home')">
+      <div class="nav-logo">
+        <svg viewBox="0 0 14 14" fill="none">
+          <path d="M7 1L13 7L7 13M1 7h12" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="nav-name">Midnight</span>
+    </a>
+    <div class="nav-links">
+      <button class="nav-link active" id="nav-home"    onclick="goTo('home')">Home</button>
+      <button class="nav-link"        id="nav-migrate" onclick="goTo('migrate')">Migrate a Policy</button>
+      <button class="nav-link"        id="nav-create"  onclick="goTo('create')">Create a Policy</button>
+    </div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge">v2.0</span>
+    <button class="nav-cta" onclick="goTo('migrate')">Get Started →</button>
+  </div>
+</nav>
 
-    <label>Template</label>
-    <select id="template">
-      <option>Generic Policy Template</option>
-      <option>Wipro HealthPlan Services</option>
-    </select>
+<!-- ══════════════════════════════════════════════════════════════════════════
+     HOME PAGE
+══════════════════════════════════════════════════════════════════════════ -->
+<div class="page active" id="page-home">
 
-    <button class="primary" onclick="preview()">Transform Policy</button>
-    <button class="secondary" onclick="generate()">Generate Document</button>
+  <section class="home-hero">
+    <div class="hero-eyebrow">Policy Intelligence Engine · by Takeoff</div>
+    <h1 class="hero-title">Mid<span class="hl">night</span></h1>
+    <div class="hero-sub">Policy Migration Engine</div>
+    <p class="hero-body">
+      Convert legacy policy documents into audit-ready,
+      template-faithful Word output — or create new policies
+      from structured intake. No manual reconstruction.
+    </p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="goTo('migrate')">Migrate a Policy →</button>
+      <button class="btn-ghost"   onclick="goTo('create')">Create a Policy</button>
+    </div>
 
-    <div id="status">Waiting for input...</div>
-    <pre id="output"></pre>
+    <!-- Apple-style product grid -->
+    <div class="product-grid">
+      <div class="product-items">
+        <a class="product-item" onclick="goTo('migrate')">
+          <div class="product-icon">
+            <svg viewBox="0 0 32 32" fill="none">
+              <rect x="4" y="4" width="24" height="24" rx="4" stroke="#00c3e3" stroke-width="1.5"/>
+              <path d="M10 16h12M10 11h12M10 21h8" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="product-label">Migrate Policy</span>
+        </a>
+        <a class="product-item" onclick="goTo('create')">
+          <div class="product-icon">
+            <svg viewBox="0 0 32 32" fill="none">
+              <rect x="4" y="4" width="24" height="24" rx="4" stroke="#00c3e3" stroke-width="1.5"/>
+              <path d="M16 10v12M10 16h12" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="product-label">Create Policy</span>
+        </a>
+        <a class="product-item" href="https://youtu.be/VfihA9MtqrA" target="_blank">
+          <div class="product-icon">
+            <svg viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="16" r="11" stroke="#00c3e3" stroke-width="1.5"/>
+              <path d="M13 11.5l9 4.5-9 4.5v-9z" fill="#00c3e3"/>
+            </svg>
+          </div>
+          <span class="product-label">Watch Demo</span>
+        </a>
+        <a class="product-item" href="https://github.com/Wordups/Midnight-2.0" target="_blank">
+          <div class="product-icon">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M16 4C9.37 4 4 9.37 4 16c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.58v-2c-3.34.72-4.04-1.6-4.04-1.6-.54-1.38-1.33-1.74-1.33-1.74-1.08-.74.08-.72.08-.72 1.2.08 1.83 1.22 1.83 1.22 1.06 1.82 2.8 1.3 3.48.98.1-.76.42-1.3.76-1.6-2.66-.3-5.46-1.33-5.46-5.92 0-1.3.46-2.38 1.22-3.22-.12-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.22A11.5 11.5 0 0116 10.5c1.02 0 2.04.14 3 .4 2.28-1.54 3.28-1.22 3.28-1.22.66 1.66.24 2.88.12 3.18.76.84 1.22 1.92 1.22 3.22 0 4.6-2.8 5.62-5.48 5.9.44.38.82 1.12.82 2.26v3.34c0 .32.22.7.82.58C24.56 25.8 28 21.3 28 16c0-6.63-5.37-12-12-12z" fill="#00c3e3"/>
+            </svg>
+          </div>
+          <span class="product-label">Source</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video -->
+  <section class="home-video-section animate-in">
+    <div class="video-frame">
+      <div class="vid-thumb" id="vid-container" onclick="playVideo()">
+        <div class="vid-overlay">
+          <div class="vid-play" id="play-btn">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M8 5.14v14l11-7-11-7z" fill="#000"/>
+            </svg>
+          </div>
+          <div class="vid-label-txt">Watch Demo — Midnight v1</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;justify-content:space-between;width:100%;max-width:840px">
+      <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.18em;color:var(--t3);text-transform:uppercase">Product Demo</span>
+      <a href="https://youtu.be/VfihA9MtqrA" target="_blank" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.14em;color:var(--t3);text-decoration:none;text-transform:uppercase;transition:color .2s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--t3)'">Open on YouTube ↗</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="home-features">
+    <div class="animate-in">
+      <div class="section-eyebrow">Capabilities</div>
+      <h2 class="section-title">Everything a policy ops team needs</h2>
+      <p class="section-sub">Built to eliminate manual effort between a legacy document and a final audit-ready output.</p>
+    </div>
+    <div class="feat-grid animate-in">
+      <div class="feat-card"><div class="feat-num">01</div><div class="feat-title">Migrate Policy</div><div class="feat-body">Upload a legacy .docx, .txt, or .md. AI extracts every field, section, bullet, table, and revision entry — rebuilds it into the target template.</div></div>
+      <div class="feat-card"><div class="feat-num">02</div><div class="feat-title">Create Policy</div><div class="feat-body">Structured intake form with smart date defaults and live preview. Fill in what you know — Midnight handles layout and template fidelity.</div></div>
+      <div class="feat-card"><div class="feat-num">03</div><div class="feat-title">Template Faithful</div><div class="feat-body">Fixed layout engine — locked column widths, exact banner heights, deterministic section rendering regardless of content length.</div></div>
+      <div class="feat-card"><div class="feat-num">04</div><div class="feat-title">Revision History</div><div class="feat-body">Extracted, mapped, and rendered as a hard requirement. Every entry carries through to the final document automatically.</div></div>
+      <div class="feat-card"><div class="feat-num">05</div><div class="feat-title">Live Preview</div><div class="feat-body">Review extracted policy data before generating. See every field, definition, procedure, and revision entry before downloading.</div></div>
+      <div class="feat-card"><div class="feat-num">06</div><div class="feat-title">One-Click Output</div><div class="feat-body">Generate a production-ready .docx in seconds. Download directly — no file management, no local dependencies, no manual formatting.</div></div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="home-stats animate-in">
+    <div class="stats-inner">
+      <div class="stat-card"><div class="stat-num">13+</div><div class="stat-lbl">Policies migrated in first production run</div></div>
+      <div class="stat-card"><div class="stat-num">80h</div><div class="stat-lbl">Manual workload reduced — accuracy handled by Midnight, not the employee</div></div>
+      <div class="stat-card"><div class="stat-num">3</div><div class="stat-lbl">Strict architecture layers — no bleed-through</div></div>
+      <div class="stat-card"><div class="stat-num">1</div><div class="stat-lbl">Workflow from legacy source to final output</div></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-brand">Midnight · Takeoff</div>
+    <div class="footer-links">
+      <a onclick="goTo('migrate')">Migrate</a>
+      <a onclick="goTo('create')">Create</a>
+      <a href="https://github.com/Wordups/Midnight-2.0" target="_blank">GitHub</a>
+    </div>
+    <div class="footer-copy">Policy Migration Engine · v2.0</div>
+  </footer>
+
+</div><!-- /page-home -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     MIGRATE PAGE
+══════════════════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-migrate">
+<div class="migrate-wrap">
+
+  <div class="page-header">
+    <h1 class="page-title">Migrate a Policy</h1>
+    <p class="page-sub">Upload a legacy document — Midnight extracts, maps, and rebuilds it into the target template.</p>
+  </div>
+
+  <!-- Step indicator -->
+  <div class="steps" id="migrate-steps">
+    <div class="step active" id="step-1">
+      <div class="step-dot">1</div>
+      <span>Upload</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step-2">
+      <div class="step-dot">2</div>
+      <span>Transform</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step-3">
+      <div class="step-dot">3</div>
+      <span>Preview</span>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step-4">
+      <div class="step-dot">4</div>
+      <span>Generate</span>
+    </div>
+  </div>
+
+  <div class="migrate-grid">
+
+    <!-- Left: controls -->
+    <div>
+      <div class="panel">
+        <div class="panel-title">Document</div>
+
+        <div class="field">
+          <label class="field-label">Legacy Policy File</label>
+          <input type="file" id="m-file" accept=".docx,.txt,.md">
+          <div class="field-note">Supported: .docx, .txt, .md</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Logo (optional)</label>
+          <input type="file" id="m-logo" accept=".png,.jpg,.jpeg,.webp">
+          <div class="field-note">PNG recommended. Added to document header.</div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Target Template</label>
+          <select id="m-template">
+            <option>Generic Policy Template</option>
+            <option>Wipro HealthPlan Services</option>
+          </select>
+        </div>
+
+        <div class="progress-wrap" id="m-progress">
+          <div class="progress-track"><div class="progress-fill" id="m-progress-fill"></div></div>
+          <div class="progress-label" id="m-progress-label">Processing…</div>
+        </div>
+
+        <div class="alert alert-error"   id="m-error"></div>
+        <div class="alert alert-success" id="m-success"></div>
+
+        <button class="action-btn action-primary"   id="m-btn-transform" onclick="migratePreview()">Transform Policy</button>
+        <button class="action-btn action-secondary" id="m-btn-generate"  onclick="migrateGenerate()" disabled>Generate Document</button>
+        <button class="action-btn action-secondary" id="m-btn-grc" onclick="downloadGRC()" disabled style="border-color:rgba(0,195,227,0.3);color:var(--cyan)">Download GRC Summary</button>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-title">Architecture</div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.9;font-family:'DM Mono',monospace">
+          <span style="color:var(--cyan)">01</span> Extraction → POLICY_DATA<br>
+          <span style="color:var(--cyan)">02</span> Mapping → schema validation<br>
+          <span style="color:var(--cyan)">03</span> Rendering → final .docx
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: preview -->
+    <div>
+      <div class="panel">
+        <div class="panel-title">Preview</div>
+        <div class="preview-pane" id="m-preview-pane">
+          <div class="preview-empty" id="m-preview-empty">
+            <div class="preview-empty-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M6 7h8M6 10h8M6 13h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>Upload a document and click<br>Transform Policy to see the preview.</div>
+          </div>
+          <div id="m-preview-content" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
+</div><!-- /page-migrate -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     CREATE PAGE
+══════════════════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-create">
+<div class="create-wrap">
+
+  <div class="page-header">
+    <h1 class="page-title">Create a Policy</h1>
+    <p class="page-sub">Generate a new policy from structured intake with smart defaults and live preview.</p>
+  </div>
+
+  <div class="create-grid">
+
+    <!-- Left: settings + defaults -->
+    <div>
+      <div class="panel">
+        <div class="panel-title">Settings</div>
+
+        <div class="field">
+          <label class="field-label">Target Template</label>
+          <select id="c-template" class="text-input" onchange="updateDefaults()">
+            <option>Generic Policy Template</option>
+            <option>Wipro HealthPlan Services</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Logo (optional)</label>
+          <input type="file" id="c-logo" accept=".png,.jpg,.jpeg,.webp">
+        </div>
+
+        <div style="margin-top:20px">
+          <div class="panel-title">Smart Defaults</div>
+          <div class="defaults-chip" id="c-defaults">
+            Fill in Effective Date to see<br>auto-filled date defaults.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="progress-wrap" id="c-progress" style="display:block;margin-bottom:0">
+          <div style="display:none" id="c-progress-inner">
+            <div class="progress-track"><div class="progress-fill" id="c-progress-fill"></div></div>
+            <div class="progress-label" id="c-progress-label">Building…</div>
+          </div>
+        </div>
+        <div class="alert alert-error"   id="c-error"></div>
+        <div class="alert alert-success" id="c-success"></div>
+        <button class="action-btn action-primary"   onclick="createPreview()">Build Preview</button>
+        <button class="action-btn action-secondary" id="c-btn-generate" onclick="createGenerate()" disabled>Generate Document</button>
+      </div>
+    </div>
+
+    <!-- Right: intake form + preview -->
+    <div>
+      <div class="panel">
+        <div class="panel-title">Intake</div>
+
+        <div class="form-section-title">Identity</div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Policy Name</label><input class="text-input" id="c-name" type="text" placeholder="Mobile Device Management…"></div>
+          <div class="field"><label class="field-label">Policy Number</label><input class="text-input" id="c-number" type="text" placeholder="SEC-P020"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Version</label><input class="text-input" id="c-version" type="text" value="V1.0"></div>
+          <div class="field"><label class="field-label">GRC ID</label><input class="text-input" id="c-grc" type="text" placeholder="Optional"></div>
+        </div>
+
+        <div class="form-section-title">Dates</div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Effective Date</label><input class="text-input" id="c-effective" type="text" placeholder="MM/DD/YYYY" oninput="updateDefaults()"></div>
+          <div class="field"><label class="field-label">Supersedes</label><input class="text-input" id="c-supersedes" type="text" placeholder="Optional"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Last Reviewed</label><input class="text-input" id="c-reviewed" type="text" placeholder="Defaults to Effective Date"></div>
+          <div class="field"><label class="field-label">Last Revised</label><input class="text-input" id="c-revised" type="text" placeholder="Defaults to Effective Date"></div>
+        </div>
+
+        <div class="form-section-title">Ownership</div>
+        <div class="field"><label class="field-label">Custodians</label><input class="text-input" id="c-custodians" type="text" placeholder="Chelsea Sanchez, Alexis Taylor"></div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Owner Name</label><input class="text-input" id="c-owner-name" type="text"></div>
+          <div class="field"><label class="field-label">Owner Title</label><input class="text-input" id="c-owner-title" type="text"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Approver Name</label><input class="text-input" id="c-approver-name" type="text"></div>
+          <div class="field"><label class="field-label">Approver Title</label><input class="text-input" id="c-approver-title" type="text"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Date Signed</label><input class="text-input" id="c-signed" type="text" placeholder="Defaults to Effective Date"></div>
+          <div class="field"><label class="field-label">Date Approved</label><input class="text-input" id="c-approved" type="text" placeholder="Defaults to Date Signed"></div>
+        </div>
+
+        <div class="form-section-title">Content</div>
+        <div class="field"><label class="field-label">Purpose and Scope</label><textarea class="text-area" id="c-purpose" style="min-height:100px" placeholder="This policy establishes…"></textarea></div>
+        <div class="field"><label class="field-label">Definitions (Term: Definition, one per line)</label><textarea class="text-area" id="c-definitions" placeholder="iGel: Linux-based OS for virtual desktops"></textarea></div>
+        <div class="field"><label class="field-label">Policy Statement</label><textarea class="text-area" id="c-statement" style="min-height:100px"></textarea></div>
+        <div class="field"><label class="field-label">Procedures (use "- " for bullets)</label><textarea class="text-area" id="c-procedures" style="min-height:140px"></textarea></div>
+        <div class="field"><label class="field-label">Related Policies (one per line)</label><textarea class="text-area" id="c-related"></textarea></div>
+        <div class="field"><label class="field-label">Citations (one per line)</label><textarea class="text-area" id="c-citations"></textarea></div>
+      </div>
+
+      <!-- Create preview pane -->
+      <div class="panel" style="margin-top:14px" id="c-preview-panel">
+        <div class="panel-title">Preview</div>
+        <div class="preview-pane">
+          <div class="preview-empty" id="c-preview-empty">
+            <div class="preview-empty-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M6 7h8M6 10h8M6 13h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div>Fill in the form and click<br>Build Preview to review.</div>
+          </div>
+          <div id="c-preview-content" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div><!-- /page-create -->
+
 
 <script>
-let policyData = null;
-let logoToken = null;
+// ── API ────────────────────────────────────────────────────────────────────
+const API = 'https://midnight-2-0.onrender.com';
 
-function setStatus(msg) {
-  document.getElementById("status").textContent = msg;
+// ── Routing ────────────────────────────────────────────────────────────────
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+  window.scrollTo(0,0);
+  window.location.hash = page;
 }
 
-async function preview() {
-  const file = document.getElementById("file").files[0];
-  const logo = document.getElementById("logo").files[0];
-  const template = document.getElementById("template").value;
-  const output = document.getElementById("output");
+// Handle hash on load
+window.addEventListener('load', () => {
+  const hash = window.location.hash.replace('#','') || 'home';
+  const valid = ['home','migrate','create'];
+  goTo(valid.includes(hash) ? hash : 'home');
+});
+window.addEventListener('hashchange', () => {
+  const hash = window.location.hash.replace('#','') || 'home';
+  goTo(hash);
+});
 
-  if (!file) {
-    setStatus("Upload a file first.");
-    return;
+// ── Video ──────────────────────────────────────────────────────────────────
+function playVideo(){
+  const c = document.getElementById('vid-container');
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none';
+  iframe.src = 'https://www.youtube.com/embed/VfihA9MtqrA?autoplay=1&rel=0&modestbranding=1&color=white';
+  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+  iframe.allowFullscreen = true;
+  c.innerHTML = ''; c.appendChild(iframe);
+}
+
+// ── Migrate helpers ────────────────────────────────────────────────────────
+let mPolicyData    = null;
+let mLogoToken    = null;
+let mFrameworkMap = null;
+let mPolicyId     = null;
+
+function mSetProgress(pct, label) {
+  const w = document.getElementById('m-progress');
+  w.style.display = 'block';
+  document.getElementById('m-progress-fill').style.width = pct + '%';
+  document.getElementById('m-progress-label').textContent = label;
+}
+function mClear() {
+  document.getElementById('m-error').style.display   = 'none';
+  document.getElementById('m-success').style.display = 'none';
+  document.getElementById('m-progress').style.display = 'none';
+}
+function mSetStep(n) {
+  for(let i=1;i<=4;i++){
+    const el = document.getElementById('step-'+i);
+    el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+    el.querySelector('.step-dot').textContent = i < n ? '✓' : i;
+  }
+}
+function renderPreview(pd, containerId, emptyId, fm) {
+  const content = document.getElementById(containerId);
+  const empty   = document.getElementById(emptyId);
+
+  const field = (label, val) => val ? `
+    <div class="preview-field">
+      <div class="preview-field-label">${label}</div>
+      <div class="preview-field-value">${val}</div>
+    </div>` : '';
+
+  let html = `
+    <div style="font-size:17px;font-weight:600;color:var(--t0);margin-bottom:4px">${pd.policy_name||'—'}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      ${pd.policy_number?`<span class="preview-tag">${pd.policy_number}</span>`:''}
+      ${pd.version?`<span class="preview-tag">${pd.version}</span>`:''}
+      ${pd.effective_date?`<span class="preview-tag">${pd.effective_date}</span>`:''}
+    </div>
+    <div class="preview-divider"></div>
+    ${field('Owner', (pd.owner_name||'') + (pd.owner_title?' — '+pd.owner_title:''))}
+    ${field('Approver', (pd.approver_name||'') + (pd.approver_title?' — '+pd.approver_title:''))}
+    ${field('Custodians', pd.custodians)}
+    <div class="preview-divider"></div>
+  `;
+
+  if(pd.purpose) html += `
+    <div class="preview-field">
+      <div class="preview-field-label">Purpose</div>
+      <div class="preview-field-value">${pd.purpose.slice(0,400)}${pd.purpose.length>400?'…':''}</div>
+    </div>`;
+
+  if(pd.policy_statement) html += `
+    <div class="preview-field">
+      <div class="preview-field-label">Policy Statement</div>
+      <div class="preview-field-value">${pd.policy_statement.slice(0,300)}${pd.policy_statement.length>300?'…':''}</div>
+    </div>`;
+
+  const defs = pd.definitions||{};
+  if(Object.keys(defs).length) {
+    html += `<div class="preview-divider"></div>
+    <div class="preview-field">
+      <div class="preview-field-label">Definitions (${Object.keys(defs).length})</div>
+      <div class="preview-field-value">${Object.keys(defs).slice(0,3).map(k=>`<strong>${k}</strong>`).join(', ')}${Object.keys(defs).length>3?', …':''}</div>
+    </div>`;
   }
 
-  setStatus("Processing...");
-  output.textContent = "";
+  const procs = pd.procedures||[];
+  const rev   = pd.revision_history||[];
+  html += `
+    <div class="preview-divider"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="preview-field">
+        <div class="preview-field-label">Procedures</div>
+        <div class="preview-field-value" style="font-size:20px;font-weight:700;color:var(--cyan)">${procs.length}</div>
+      </div>
+      <div class="preview-field">
+        <div class="preview-field-label">Revision History</div>
+        <div class="preview-field-value" style="font-size:20px;font-weight:700;color:var(--cyan)">${rev.length}</div>
+      </div>
+    </div>`;
 
-  const form = new FormData();
-  form.append("source_file", file);
-  form.append("template_name", template);
-  if (logo) form.append("logo_file", logo);
+  // Framework map section
+  if(typeof fm !== 'undefined' && fm && (fm.mapped_citations||fm.gaps)) {
+    html += '<div class="preview-divider"></div>';
+    html += '<div class="preview-field-label" style="color:var(--cyan);margin-bottom:10px">FRAMEWORK MAPPING</div>';
 
-  try {
-    const res = await fetch("http://127.0.0.1:8000/api/migrate/preview", {
-      method: "POST",
-      body: form
-    });
-
-    const rawText = await res.text();
-    let parsed;
-    try {
-      parsed = JSON.parse(rawText);
-    } catch {
-      parsed = { raw: rawText };
+    // Audit summary
+    if(fm.audit_summary) {
+      html += `<div style="font-size:12px;color:var(--t1);line-height:1.6;margin-bottom:12px;padding:10px;background:var(--s1);border-radius:6px;border:1px solid var(--b0)">${fm.audit_summary}</div>`;
     }
 
-    console.log("Preview response:", parsed);
+    // Coverage badge
+    const cov = (fm.overall_coverage||'').toLowerCase();
+    const covColor = cov==='strong' ? '#00d68f' : cov==='moderate' ? '#faaa28' : '#fa5a28';
+    html += `<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace">Coverage:</span>
+      <span style="background:${covColor}18;border:1px solid ${covColor}44;color:${covColor};border-radius:4px;padding:2px 10px;font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase">${fm.overall_coverage||'unknown'}</span>
+      <span style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace">${fm.total_controls_mapped||0} controls mapped · ${fm.total_gaps||0} gaps found</span>
+    </div>`;
 
-    if (!res.ok) {
-      const detail = parsed?.detail || parsed?.raw || `HTTP ${res.status}`;
-      output.textContent = "BACKEND ERROR:\n" + detail;
-      setStatus("Preview failed.");
+    // Frameworks covered
+    if(fm.frameworks_covered && fm.frameworks_covered.length) {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+      fm.frameworks_covered.forEach(f => {
+        html += `<span class="preview-tag">${f}</span>`;
+      });
+      html += '</div>';
+    }
+
+    // Gaps
+    const gaps = fm.gaps||[];
+    if(gaps.length) {
+      html += `<div style="font-size:11px;font-weight:600;color:#fa5a28;letter-spacing:0.1em;text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:8px">Gaps (${gaps.length})</div>`;
+      gaps.slice(0,3).forEach(g => {
+        const rc = g.risk_level==='high' ? '#fa5a28' : g.risk_level==='medium' ? '#faaa28' : '#8a9bb5';
+        html += `<div style="padding:10px;background:var(--s1);border-radius:6px;border:1px solid ${rc}33;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--t0)">${g.framework} ${g.control_id}</span>
+            <span style="font-size:10px;color:${rc};font-family:'DM Mono',monospace;text-transform:uppercase">${g.risk_level}</span>
+          </div>
+          <div style="font-size:12px;color:var(--t2);margin-bottom:6px">${g.gap_description}</div>
+          <div style="font-size:11px;color:var(--cyan);border-top:1px solid var(--b0);padding-top:6px"><strong>Suggestion:</strong> ${g.suggestion}</div>
+        </div>`;
+      });
+      if(gaps.length > 3) {
+        html += `<div style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace">+ ${gaps.length-3} more gaps in GRC Summary doc</div>`;
+      }
+    }
+  }
+
+  empty.style.display   = 'none';
+  content.style.display = 'block';
+  content.innerHTML     = html;
+}
+
+async function migratePreview() {
+  const file     = document.getElementById('m-file').files[0];
+  const logo     = document.getElementById('m-logo').files[0];
+  const template = document.getElementById('m-template').value;
+
+  if(!file){ showAlert('m-error','Upload a policy file first.'); return; }
+
+  mClear(); mPolicyData = null; mLogoToken = null; mFrameworkMap = null; mPolicyId = null;
+  document.getElementById('m-preview-content').style.display = 'none';
+  document.getElementById('m-preview-empty').style.display   = 'flex';
+
+  const btn = document.getElementById('m-btn-transform');
+  btn.disabled = true; btn.textContent = 'Processing…';
+  document.getElementById('m-btn-generate').disabled = true;
+  mSetStep(2);
+
+  const form = new FormData();
+  form.append('source_file', file);
+  form.append('template_name', template);
+  if(logo) form.append('logo_file', logo);
+
+  try {
+    mSetProgress(20, 'Uploading document…');
+    mSetProgress(40, 'Extracting policy structure…');
+
+    const res  = await fetch(API + '/api/migrate/preview', { method:'POST', body:form });
+    const raw  = await res.text();
+    let parsed; try{ parsed = JSON.parse(raw); }catch{ parsed = {detail:raw}; }
+
+    if(!res.ok){ showAlert('m-error', parsed.detail||'Preview failed.'); mSetStep(1); return; }
+
+    mSetProgress(85, 'Parsing extracted data…');
+    mPolicyData    = parsed.policy_data;
+    mLogoToken     = parsed.logo_token;
+    mFrameworkMap  = parsed.framework_map || null;
+    mPolicyId      = parsed.policy_id    || null;
+    mSetProgress(100, 'Done');
+
+    setTimeout(()=>{ document.getElementById('m-progress').style.display='none'; },600);
+
+    showAlert('m-success', '✓ Extraction complete — review the preview, then generate.');
+    mSetStep(3);
+    renderPreview(mPolicyData, 'm-preview-content', 'm-preview-empty', mFrameworkMap);
+    document.getElementById('m-btn-generate').disabled = false;
+    document.getElementById('m-btn-grc').disabled = mFrameworkMap ? false : true;
+
+  } catch(e) {
+    showAlert('m-error', 'Request failed: ' + e.message);
+    mSetStep(1);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Transform Policy';
+  }
+}
+
+async function migrateGenerate() {
+  if(!mPolicyData){ showAlert('m-error','Run Transform first.'); return; }
+
+  mClear();
+  const btn = document.getElementById('m-btn-generate');
+  btn.disabled = true; btn.textContent = 'Building…';
+  mSetStep(4);
+  mSetProgress(40, 'Building document…');
+
+  try {
+    const res = await fetch(API + '/api/migrate/generate', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ policy_data: mPolicyData, logo_token: mLogoToken })
+    });
+
+    if(!res.ok){
+      const raw = await res.text();
+      let p; try{p=JSON.parse(raw);}catch{p={detail:raw};}
+      showAlert('m-error', p.detail||'Generate failed.');
+      mSetStep(3); return;
+    }
+
+    mSetProgress(90, 'Finalizing…');
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const name = (mPolicyData.policy_number||'Policy') + ' ' + (mPolicyData.policy_name||'') + ' ' + (mPolicyData.version||'') + '-NEW.docx';
+    a.href = url; a.download = name.trim(); a.click();
+    URL.revokeObjectURL(url);
+
+    mSetProgress(100,'Download complete');
+    showAlert('m-success','✓ Document downloaded successfully.');
+
+  } catch(e) {
+    showAlert('m-error','Generate failed: '+e.message);
+    mSetStep(3);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Generate Document';
+  }
+}
+
+// ── Create helpers ─────────────────────────────────────────────────────────
+let cPolicyData = null;
+
+function normDate(val) {
+  if(!val||!val.trim()) return '';
+  const fmts = ['%m/%d/%Y','%m/%d/%y'];
+  return val.trim();
+}
+function fallback(v, src) { return (v&&v.trim()) ? v.trim() : src; }
+
+function updateDefaults() {
+  const eff = document.getElementById('c-effective').value.trim();
+  if(!eff){ document.getElementById('c-defaults').innerHTML = 'Fill in Effective Date to see<br>auto-filled date defaults.'; return; }
+  const rev  = fallback(document.getElementById('c-reviewed').value, eff);
+  const revd = fallback(document.getElementById('c-revised').value,  eff);
+  const sign = fallback(document.getElementById('c-signed').value,   eff);
+  const appr = fallback(document.getElementById('c-approved').value, sign);
+  document.getElementById('c-defaults').innerHTML =
+    `<strong>Last Reviewed:</strong> ${rev||'—'}<br>` +
+    `<strong>Last Revised:</strong> ${revd||'—'}<br>` +
+    `<strong>Date Signed:</strong> ${sign||'—'}<br>` +
+    `<strong>Date Approved:</strong> ${appr||'—'}`;
+}
+
+function buildCreateData() {
+  const eff  = document.getElementById('c-effective').value.trim();
+  const sign = fallback(document.getElementById('c-signed').value,   eff);
+  const defs = {};
+  (document.getElementById('c-definitions').value||'').split('\n').forEach(line=>{
+    line = line.trim(); if(!line) return;
+    const i = line.indexOf(':');
+    if(i>0){ defs[line.slice(0,i).trim()] = line.slice(i+1).trim(); }
+    else{ defs[line] = ''; }
+  });
+  const procs = [];
+  (document.getElementById('c-procedures').value||'').split('\n').forEach(line=>{
+    line = line.trim(); if(!line) return;
+    if(line.startsWith('- ')) procs.push({type:'bullet',text:line.slice(2).trim()});
+    else procs.push({type:'para',text:line});
+  });
+  return {
+    policy_name:    document.getElementById('c-name').value.trim(),
+    policy_number:  document.getElementById('c-number').value.trim(),
+    version:        document.getElementById('c-version').value.trim()||'V1.0',
+    grc_id:         document.getElementById('c-grc').value.trim(),
+    supersedes:     document.getElementById('c-supersedes').value.trim(),
+    effective_date: eff,
+    last_reviewed:  fallback(document.getElementById('c-reviewed').value, eff),
+    last_revised:   fallback(document.getElementById('c-revised').value,  eff),
+    custodians:     document.getElementById('c-custodians').value.trim(),
+    owner_name:     document.getElementById('c-owner-name').value.trim(),
+    owner_title:    document.getElementById('c-owner-title').value.trim(),
+    approver_name:  document.getElementById('c-approver-name').value.trim(),
+    approver_title: document.getElementById('c-approver-title').value.trim(),
+    date_signed:    sign,
+    date_approved:  fallback(document.getElementById('c-approved').value, sign),
+    applicable_to:  {hps_inc:false,agency:true,corporate:true,govt_affairs:false,legal_review:false},
+    policy_types:   {carrier_specific:false,cross_carrier:false,global:true,on_off_hix:false},
+    line_of_business:{all_lobs:true,specific_lob:'',specific_lob_checked:false},
+    purpose:        document.getElementById('c-purpose').value.trim(),
+    definitions:    defs,
+    policy_statement:document.getElementById('c-statement').value.trim(),
+    procedures:     procs,
+    related_policies:(document.getElementById('c-related').value||'').split('\n').map(l=>l.trim()).filter(Boolean),
+    citations:      (document.getElementById('c-citations').value||'').split('\n').map(l=>l.trim()).filter(Boolean),
+    revision_history:[],
+    template_name:  document.getElementById('c-template').value,
+  };
+}
+
+function createPreview() {
+  const pd = buildCreateData();
+  if(!pd.policy_name){ showAlert('c-error','Policy Name is required.'); return; }
+  cPolicyData = pd;
+  renderPreview(pd, 'c-preview-content', 'c-preview-empty');
+  showAlert('c-success','✓ Preview ready — review above, then generate.');
+  document.getElementById('c-btn-generate').disabled = false;
+}
+
+async function createGenerate() {
+  if(!cPolicyData){ showAlert('c-error','Build preview first.'); return; }
+
+  const logo = document.getElementById('c-logo').files[0];
+  let logoToken = null;
+
+  const btn = document.getElementById('c-btn-generate');
+  btn.disabled = true; btn.textContent = 'Building…';
+
+  const pi = document.getElementById('c-progress-inner');
+  pi.style.display = 'block';
+  cSetProgress(20,'Uploading logo…');
+
+  try {
+    // Upload logo first if present
+    if(logo) {
+      const lForm = new FormData();
+      lForm.append('source_file', new File(['placeholder'],'placeholder.txt',{type:'text/plain'}));
+      lForm.append('template_name', cPolicyData.template_name);
+      lForm.append('logo_file', logo);
+      // We'll upload via generate directly
+    }
+
+    cSetProgress(50,'Building document…');
+
+    const res = await fetch(API + '/api/migrate/generate', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ policy_data: cPolicyData, logo_token: logoToken })
+    });
+
+    if(!res.ok){
+      const raw = await res.text();
+      let p; try{p=JSON.parse(raw);}catch{p={detail:raw};}
+      showAlert('c-error', p.detail||'Generate failed.');
       return;
     }
 
-    policyData = parsed.policy_data;
-    logoToken = parsed.logo_token;
-    output.textContent = JSON.stringify(parsed, null, 2);
-    setStatus("Preview ready.");
-  } catch (e) {
-    output.textContent = "FRONTEND ERROR:\n" + e.message;
-    setStatus("Request failed.");
+    cSetProgress(90,'Finalizing…');
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const name = (cPolicyData.policy_number||'Policy') + ' ' + (cPolicyData.policy_name||'') + ' ' + (cPolicyData.version||'') + '-NEW.docx';
+    a.href = url; a.download = name.trim(); a.click();
+    URL.revokeObjectURL(url);
+
+    cSetProgress(100,'Download complete');
+    showAlert('c-success','✓ Document downloaded successfully.');
+
+  } catch(e) {
+    showAlert('c-error','Generate failed: '+e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Generate Document';
   }
 }
 
-async function generate() {
-  const output = document.getElementById("output");
+function cSetProgress(pct, label) {
+  document.getElementById('c-progress-fill').style.width = pct + '%';
+  document.getElementById('c-progress-label').textContent = label;
+}
 
-  if (!policyData) {
-    setStatus("Run preview first.");
-    return;
-  }
+function showAlert(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
 
-  setStatus("Generating document...");
+// ── GRC Summary download ──────────────────────────────────────────────────
+async function downloadGRC() {
+  if(!mFrameworkMap){ showAlert('m-error','Run Transform first.'); return; }
+
+  const btn = document.getElementById('m-btn-grc');
+  btn.disabled = true; btn.textContent = 'Building GRC Summary…';
+  mClear();
+  mSetProgress(40, 'Building GRC summary…');
 
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/migrate/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch(API + '/api/migrate/grc-summary', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        policy_data: policyData,
-        logo_token: logoToken
+        policy_id:     mPolicyId,
+        policy_data:   mPolicyData,
+        framework_map: mFrameworkMap,
       })
     });
 
-    if (!res.ok) {
-      const rawText = await res.text();
-      let parsed;
-      try {
-        parsed = JSON.parse(rawText);
-      } catch {
-        parsed = { raw: rawText };
-      }
-
-      const detail = parsed?.detail || parsed?.raw || `HTTP ${res.status}`;
-      output.textContent = "GENERATE ERROR:\n" + detail;
-      setStatus("Generate failed.");
+    if(!res.ok){
+      const raw = await res.text();
+      let p; try{p=JSON.parse(raw);}catch{p={detail:raw};}
+      showAlert('m-error', p.detail||'GRC summary failed.');
       return;
     }
 
+    mSetProgress(90, 'Finalizing…');
     const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "policy.docx";
-    a.click();
-    window.URL.revokeObjectURL(url);
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const name = (mPolicyData.policy_number||'Policy') + ' ' + (mPolicyData.policy_name||'') + '-GRC-Summary.docx';
+    a.href = url; a.download = name.trim(); a.click();
+    URL.revokeObjectURL(url);
 
-    setStatus("Download complete.");
-  } catch (e) {
-    output.textContent = "FRONTEND ERROR:\n" + e.message;
-    setStatus("Generate request failed.");
+    mSetProgress(100, 'GRC Summary downloaded');
+    showAlert('m-success', '✓ GRC Summary downloaded — ready for Ostendio / your GRC tool.');
+
+  } catch(e) {
+    showAlert('m-error', 'GRC summary failed: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Download GRC Summary';
   }
 }
+
+// ── Scroll animations ──────────────────────────────────────────────────────
+const observer = new IntersectionObserver(
+  entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }),
+  {threshold:0.1, rootMargin:'0px 0px -40px 0px'}
+);
+document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+
+// Set today as default effective date
+const today = new Date();
+document.getElementById('c-effective').value =
+  (today.getMonth()+1) + '/' + today.getDate() + '/' + today.getFullYear();
+updateDefaults();
 </script>
+
 </body>
 </html>
