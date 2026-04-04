@@ -287,11 +287,11 @@ nav{
   display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
 }
 .feat-card{
-  background:var(--s1);border:1px solid var(--b0);
-  border-radius:12px;padding:24px;
-  transition:border-color .2s,transform .2s;
+  background:transparent;border:1px solid transparent;
+  border-radius:0 10px 10px 0;padding:20px 24px;
+  transition:background .2s;
 }
-.feat-card:hover{border-color:var(--b1);transform:translateY(-2px)}
+.feat-card:hover{background:rgba(255,255,255,0.02)}
 .feat-num{
   font-family:'DM Mono',monospace;
   font-size:11px;color:var(--cyan);
@@ -566,6 +566,74 @@ footer{
 .animate-in{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
 .animate-in.visible{opacity:1;transform:translateY(0)}
 
+/* ── Ticker ───────────────────────────────────────────────────────────────── */
+.ticker-set{
+  display:inline-flex;align-items:center;gap:0;
+  padding-right:0;
+}
+.ticker-set span{
+  font-family:'DM Mono',monospace;
+  font-size:11px;font-weight:500;
+  letter-spacing:0.14em;text-transform:uppercase;
+  color:#000;padding:0 18px;
+}
+.ticker-dot{
+  color:rgba(0,0,0,0.35) !important;
+  padding:0 2px !important;
+  letter-spacing:0 !important;
+}
+
+/* ── Page transitions ─────────────────────────────────────────────────────── */
+.page{
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity .35s ease, transform .35s ease;
+  display:none;
+}
+.page.active{
+  display:block;
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* ── Counter animation ────────────────────────────────────────────────────── */
+.count-up{
+  transition:all .1s ease;
+}
+
+/* ── Stat strip hover ─────────────────────────────────────────────────────── */
+.stat-item{
+  padding:32px 28px;
+  transition:background .2s ease;
+}
+.stat-item:hover{background:rgba(255,255,255,0.02)}
+
+/* ── Feature card transitions ─────────────────────────────────────────────── */
+.feat-card{
+  transition:background .2s ease, padding-left .2s ease !important;
+}
+
+/* ── Nav link underline animation ─────────────────────────────────────────── */
+.nav-link{
+  position:relative;
+}
+.nav-link::after{
+  content:'';
+  position:absolute;
+  bottom:-2px;left:50%;right:50%;
+  height:1px;background:var(--cyan);
+  transition:left .2s ease, right .2s ease;
+}
+.nav-link.active::after,
+.nav-link:hover::after{
+  left:12px;right:12px;
+}
+
+@keyframes tickerScroll{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+
 /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
 @media(max-width:860px){
   .migrate-grid,.create-grid,.form-row{grid-template-columns:1fr}
@@ -577,6 +645,7 @@ footer{
   .nav-links{display:none}
   .nav-badge{display:none}
   .migrate-wrap,.create-wrap{padding:32px 1.25rem 60px}
+  .home-hero{grid-template-columns:1fr !important}
 }
 </style>
 </head>
@@ -610,61 +679,212 @@ footer{
 ══════════════════════════════════════════════════════════════════════════ -->
 <div class="page active" id="page-home">
 
-  <section class="home-hero">
-    <div class="hero-eyebrow">Policy Intelligence Engine · by Takeoff</div>
-    <h1 class="hero-title">Mid<span class="hl">night</span></h1>
-    <div class="hero-sub">Policy Migration Engine</div>
-    <p class="hero-body">
-      Convert legacy policy documents into audit-ready,
-      template-faithful Word output — or create new policies
-      from structured intake. No manual reconstruction.
-    </p>
-    <div class="hero-btns">
-      <button class="btn-primary" onclick="goTo('migrate')">Migrate a Policy →</button>
-      <button class="btn-ghost"   onclick="goTo('create')">Create a Policy</button>
-    </div>
-
-    <!-- Apple-style product grid -->
-    <div class="product-grid">
-      <div class="product-items">
-        <a class="product-item" onclick="goTo('migrate')">
-          <div class="product-icon">
-            <svg viewBox="0 0 32 32" fill="none">
-              <rect x="4" y="4" width="24" height="24" rx="4" stroke="#00c3e3" stroke-width="1.5"/>
-              <path d="M10 16h12M10 11h12M10 21h8" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span class="product-label">Migrate Policy</span>
-        </a>
-        <a class="product-item" onclick="goTo('create')">
-          <div class="product-icon">
-            <svg viewBox="0 0 32 32" fill="none">
-              <rect x="4" y="4" width="24" height="24" rx="4" stroke="#00c3e3" stroke-width="1.5"/>
-              <path d="M16 10v12M10 16h12" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <span class="product-label">Create Policy</span>
-        </a>
-        <a class="product-item" href="https://youtu.be/VfihA9MtqrA" target="_blank">
-          <div class="product-icon">
-            <svg viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="11" stroke="#00c3e3" stroke-width="1.5"/>
-              <path d="M13 11.5l9 4.5-9 4.5v-9z" fill="#00c3e3"/>
-            </svg>
-          </div>
-          <span class="product-label">Watch Demo</span>
-        </a>
-        <a class="product-item" href="https://github.com/Wordups/Midnight-2.0" target="_blank">
-          <div class="product-icon">
-            <svg viewBox="0 0 32 32" fill="none">
-              <path d="M16 4C9.37 4 4 9.37 4 16c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.58v-2c-3.34.72-4.04-1.6-4.04-1.6-.54-1.38-1.33-1.74-1.33-1.74-1.08-.74.08-.72.08-.72 1.2.08 1.83 1.22 1.83 1.22 1.06 1.82 2.8 1.3 3.48.98.1-.76.42-1.3.76-1.6-2.66-.3-5.46-1.33-5.46-5.92 0-1.3.46-2.38 1.22-3.22-.12-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.22A11.5 11.5 0 0116 10.5c1.02 0 2.04.14 3 .4 2.28-1.54 3.28-1.22 3.28-1.22.66 1.66.24 2.88.12 3.18.76.84 1.22 1.92 1.22 3.22 0 4.6-2.8 5.62-5.48 5.9.44.38.82 1.12.82 2.26v3.34c0 .32.22.7.82.58C24.56 25.8 28 21.3 28 16c0-6.63-5.37-12-12-12z" fill="#00c3e3"/>
-            </svg>
-          </div>
-          <span class="product-label">Source</span>
-        </a>
+  <!-- Ticker bar -->
+  <div style="background:#00c3e3;overflow:hidden;height:34px;display:flex;align-items:center;border-bottom:none">
+    <div id="ticker-track" style="display:flex;align-items:center;gap:0;white-space:nowrap;animation:tickerScroll 28s linear infinite">
+      <div class="ticker-set">
+        <span>HIPAA Compliant</span><span class="ticker-dot">·</span>
+        <span>HiTrust Mapped</span><span class="ticker-dot">·</span>
+        <span>PCI DSS v4.0</span><span class="ticker-dot">·</span>
+        <span>ISO 27001:2022</span><span class="ticker-dot">·</span>
+        <span>NIST CSF v2.0</span><span class="ticker-dot">·</span>
+        <span>CoBIT 2019</span><span class="ticker-dot">·</span>
+        <span>SOC 2 Type II</span><span class="ticker-dot">·</span>
+        <span>Gap Analysis Included</span><span class="ticker-dot">·</span>
+        <span>GRC Summary Generated</span><span class="ticker-dot">·</span>
+        <span>Audit Ready Output</span><span class="ticker-dot">·</span>
+        <span>13+ Policies Migrated</span><span class="ticker-dot">·</span>
+        <span>No Manual Formatting</span><span class="ticker-dot">·</span>
+      </div>
+      <div class="ticker-set" aria-hidden="true">
+        <span>HIPAA Compliant</span><span class="ticker-dot">·</span>
+        <span>HiTrust Mapped</span><span class="ticker-dot">·</span>
+        <span>PCI DSS v4.0</span><span class="ticker-dot">·</span>
+        <span>ISO 27001:2022</span><span class="ticker-dot">·</span>
+        <span>NIST CSF v2.0</span><span class="ticker-dot">·</span>
+        <span>CoBIT 2019</span><span class="ticker-dot">·</span>
+        <span>SOC 2 Type II</span><span class="ticker-dot">·</span>
+        <span>Gap Analysis Included</span><span class="ticker-dot">·</span>
+        <span>GRC Summary Generated</span><span class="ticker-dot">·</span>
+        <span>Audit Ready Output</span><span class="ticker-dot">·</span>
+        <span>13+ Policies Migrated</span><span class="ticker-dot">·</span>
+        <span>No Manual Formatting</span><span class="ticker-dot">·</span>
       </div>
     </div>
+  </div>
+
+  <section class="home-hero" style="min-height:calc(100vh - var(--nav-h));display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch;padding:0;max-width:none;text-align:left">
+
+    <!-- Left column -->
+    <div style="display:flex;flex-direction:column;justify-content:center;padding:80px 60px 80px 80px;position:relative;z-index:2">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.26em;color:#00c3e3;text-transform:uppercase;margin-bottom:24px;opacity:0;animation:fadeUp .8s ease .1s forwards">Policy Intelligence Engine · Takeoff</div>
+
+      <h1 style="font-family:'Syne',sans-serif;font-size:clamp(72px,8vw,110px);font-weight:800;letter-spacing:0.02em;color:#fff;line-height:0.92;text-transform:uppercase;margin-bottom:28px;opacity:0;animation:fadeUp .9s ease .2s forwards">Mid<br><span style="color:#00c3e3">night</span></h1>
+
+      <p style="font-size:17px;color:#8a9bb5;max-width:440px;line-height:1.7;font-weight:300;margin-bottom:36px;opacity:0;animation:fadeUp .9s ease .3s forwards">Create compliance-ready policies mapped to HIPAA, HiTrust, PCI DSS, and ISO frameworks. Migrate legacy docs. Ship audit-ready output in minutes.</p>
+
+      <div style="display:flex;gap:12px;margin-bottom:52px;opacity:0;animation:fadeUp .9s ease .4s forwards">
+        <button class="btn-primary" onclick="goTo('create')" style="padding:14px 32px;font-size:15px">Create a Policy →</button>
+        <button class="btn-ghost"   onclick="goTo('migrate')" style="padding:14px 32px;font-size:15px">Migrate a Policy</button>
+      </div>
+
+      <!-- Framework badges -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;opacity:0;animation:fadeUp .9s ease .5s forwards">
+        <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;color:#4c607a;border:1px solid #0c1524;border-radius:4px;padding:4px 10px">HIPAA</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;color:#4c607a;border:1px solid #0c1524;border-radius:4px;padding:4px 10px">HiTrust</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;color:#4c607a;border:1px solid #0c1524;border-radius:4px;padding:4px 10px">PCI DSS</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;color:#4c607a;border:1px solid #0c1524;border-radius:4px;padding:4px 10px">ISO 27001</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;color:#4c607a;border:1px solid #0c1524;border-radius:4px;padding:4px 10px">NIST CSF</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;color:#4c607a;border:1px solid #0c1524;border-radius:4px;padding:4px 10px">CoBIT</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;color:#4c607a;border:1px solid #0c1524;border-radius:4px;padding:4px 10px">SOC 2</span>
+      </div>
+    </div>
+
+    <!-- Right column: product mockup -->
+    <div style="position:relative;background:#060e1c;border-left:1px solid rgba(255,255,255,0.06);overflow:hidden;min-height:600px;display:flex;align-items:center;justify-content:center;padding:40px 32px">
+
+      <!-- Ambient glow -->
+      <div style="position:absolute;top:20%;left:20%;width:300px;height:300px;background:radial-gradient(circle,rgba(0,195,227,0.07),transparent 65%);pointer-events:none"></div>
+      <div style="position:absolute;bottom:20%;right:10%;width:200px;height:200px;background:radial-gradient(circle,rgba(250,90,40,0.05),transparent 65%);pointer-events:none"></div>
+
+      <!-- Browser chrome mockup -->
+      <div style="width:100%;max-width:520px;border-radius:12px;border:1px solid rgba(255,255,255,0.10);overflow:hidden;opacity:0;animation:fadeUp 1s ease .6s forwards;box-shadow:0 40px 80px rgba(0,0,0,.6)">
+
+        <!-- Browser bar -->
+        <div style="background:#0d1525;padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.06)">
+          <div style="display:flex;gap:5px">
+            <div style="width:10px;height:10px;border-radius:50%;background:#ff5f57"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#febc2e"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#28c840"></div>
+          </div>
+          <div style="flex:1;background:#060e1c;border:1px solid rgba(255,255,255,0.06);border-radius:5px;padding:4px 10px;font-family:'DM Mono',monospace;font-size:10px;color:#4c607a;letter-spacing:0.06em">wordups.github.io/midnight</div>
+        </div>
+
+        <!-- Mockup nav -->
+        <div style="background:#080f1a;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:20px;height:20px;background:#00c3e3;border-radius:4px"></div>
+            <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:#fff;letter-spacing:0.1em">MIDNIGHT</span>
+          </div>
+          <div style="display:flex;gap:12px">
+            <span style="font-size:10px;color:#4c607a">Home</span>
+            <span style="font-size:10px;color:#00c3e3;border-bottom:1px solid #00c3e3;padding-bottom:1px">Migrate</span>
+            <span style="font-size:10px;color:#4c607a">Create</span>
+          </div>
+        </div>
+
+        <!-- Mockup content -->
+        <div style="background:#03080f;padding:20px 16px">
+
+          <!-- Page title -->
+          <div style="margin-bottom:14px">
+            <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:3px">Migrate a Policy</div>
+            <div style="font-size:10px;color:#4c607a">Upload a legacy document — Midnight extracts and maps to compliance frameworks.</div>
+          </div>
+
+          <!-- Step bar -->
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">
+            <div style="font-size:9px;font-family:'DM Mono',monospace;color:#00c3e3;border:1px solid rgba(0,195,227,0.3);border-radius:3px;padding:2px 7px;background:rgba(0,195,227,0.08)">1 Upload</div>
+            <div style="height:1px;flex:1;background:rgba(255,255,255,0.06)"></div>
+            <div style="font-size:9px;font-family:'DM Mono',monospace;color:#4c607a;border:1px solid rgba(255,255,255,0.06);border-radius:3px;padding:2px 7px">2 Transform</div>
+            <div style="height:1px;flex:1;background:rgba(255,255,255,0.06)"></div>
+            <div style="font-size:9px;font-family:'DM Mono',monospace;color:#4c607a;border:1px solid rgba(255,255,255,0.06);border-radius:3px;padding:2px 7px">3 Preview</div>
+            <div style="height:1px;flex:1;background:rgba(255,255,255,0.06)"></div>
+            <div style="font-size:9px;font-family:'DM Mono',monospace;color:#4c607a;border:1px solid rgba(255,255,255,0.06);border-radius:3px;padding:2px 7px">4 Generate</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:0.9fr 1.1fr;gap:10px">
+
+            <!-- Left panel -->
+            <div style="background:#0a1628;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px">
+              <div style="font-size:9px;font-family:'DM Mono',monospace;color:#4c607a;letter-spacing:0.12em;margin-bottom:8px;text-transform:uppercase">Document</div>
+              <div style="background:#060e1c;border:1px dashed rgba(255,255,255,0.10);border-radius:6px;padding:10px;text-align:center;margin-bottom:8px">
+                <div style="font-size:9px;color:#4c607a">SEC-P020_Mobile.docx</div>
+                <div style="font-size:8px;color:#2a3a50;margin-top:2px">10,377 chars extracted</div>
+              </div>
+              <div style="background:#060e1c;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:7px;margin-bottom:8px">
+                <div style="font-size:9px;color:#8a9bb5">Wipro HealthPlan Services</div>
+              </div>
+              <div style="background:#00c3e3;border-radius:5px;padding:6px;text-align:center">
+                <div style="font-size:9px;font-weight:700;color:#000">Transform Policy</div>
+              </div>
+            </div>
+
+            <!-- Right panel: preview with framework map -->
+            <div style="background:#0a1628;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px">
+              <div style="font-size:9px;font-family:'DM Mono',monospace;color:#4c607a;letter-spacing:0.12em;margin-bottom:8px;text-transform:uppercase">Preview</div>
+
+              <div style="margin-bottom:8px">
+                <div style="font-size:11px;font-weight:600;color:#fff;margin-bottom:2px">Mobile Device Management</div>
+                <div style="display:flex;gap:4px;flex-wrap:wrap">
+                  <span style="font-size:8px;background:rgba(0,195,227,0.1);border:1px solid rgba(0,195,227,0.2);color:#00c3e3;border-radius:3px;padding:1px 5px">SEC-P020</span>
+                  <span style="font-size:8px;background:rgba(0,195,227,0.1);border:1px solid rgba(0,195,227,0.2);color:#00c3e3;border-radius:3px;padding:1px 5px">V10.0</span>
+                </div>
+              </div>
+
+              <div style="height:1px;background:rgba(255,255,255,0.05);margin-bottom:8px"></div>
+
+              <!-- Framework mapping mini display -->
+              <div style="font-size:8px;font-family:'DM Mono',monospace;color:#00c3e3;letter-spacing:0.1em;margin-bottom:6px;text-transform:uppercase">Framework Mapping</div>
+
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                <div style="font-size:8px;color:#4c607a">Coverage</div>
+                <div style="font-size:8px;background:rgba(0,214,143,0.12);border:1px solid rgba(0,214,143,0.25);color:#00d68f;border-radius:3px;padding:1px 6px;font-family:'DM Mono',monospace">STRONG</div>
+                <div style="font-size:8px;color:#4c607a;margin-left:auto">14 mapped · 2 gaps</div>
+              </div>
+
+              <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px">
+                <span style="font-size:7px;color:#4c607a;border:1px solid #0c1524;border-radius:3px;padding:1px 5px">HIPAA</span>
+                <span style="font-size:7px;color:#4c607a;border:1px solid #0c1524;border-radius:3px;padding:1px 5px">HiTrust</span>
+                <span style="font-size:7px;color:#4c607a;border:1px solid #0c1524;border-radius:3px;padding:1px 5px">PCI DSS</span>
+                <span style="font-size:7px;color:#4c607a;border:1px solid #0c1524;border-radius:3px;padding:1px 5px">ISO 27001</span>
+              </div>
+
+              <!-- Gap pill -->
+              <div style="background:rgba(250,90,40,0.08);border:1px solid rgba(250,90,40,0.2);border-radius:5px;padding:6px 8px">
+                <div style="font-size:8px;color:#ff8a6a;font-weight:600;margin-bottom:2px">Gap — NIST CSF PR.AC-1</div>
+                <div style="font-size:7px;color:#4c607a;line-height:1.4">Access credentials not addressed. Suggestion available.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Download buttons -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px">
+            <div style="background:#0a1628;border:1px solid rgba(255,255,255,0.08);border-radius:5px;padding:6px;text-align:center">
+              <div style="font-size:9px;color:#8a9bb5">Generate Document</div>
+            </div>
+            <div style="background:#0a1628;border:1px solid rgba(0,195,227,0.2);border-radius:5px;padding:6px;text-align:center">
+              <div style="font-size:9px;color:#00c3e3">Download GRC Summary</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
   </section>
+
+  <!-- Apple-style quick nav strip -->
+  <div style="border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);background:#060e1c">
+    <div style="max-width:1280px;margin:0 auto;display:flex">
+      <a class="product-item" onclick="goTo('migrate')" style="flex:1;padding:20px 24px">
+        <div class="product-icon"><svg viewBox="0 0 32 32" fill="none"><rect x="4" y="4" width="24" height="24" rx="4" stroke="#00c3e3" stroke-width="1.5"/><path d="M10 16h12M10 11h12M10 21h8" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <span class="product-label">Migrate Policy</span>
+      </a>
+      <a class="product-item" onclick="goTo('create')" style="flex:1;padding:20px 24px">
+        <div class="product-icon"><svg viewBox="0 0 32 32" fill="none"><rect x="4" y="4" width="24" height="24" rx="4" stroke="#00c3e3" stroke-width="1.5"/><path d="M16 10v12M10 16h12" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <span class="product-label">Create Policy</span>
+      </a>
+      <a class="product-item" href="https://youtu.be/VfihA9MtqrA" target="_blank" style="flex:1;padding:20px 24px">
+        <div class="product-icon"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="11" stroke="#00c3e3" stroke-width="1.5"/><path d="M13 11.5l9 4.5-9 4.5v-9z" fill="#00c3e3"/></svg></div>
+        <span class="product-label">Watch Demo</span>
+      </a>
+      <a class="product-item" href="https://github.com/Wordups/Midnight-2.0" target="_blank" style="flex:1;padding:20px 24px">
+        <div class="product-icon"><svg viewBox="0 0 32 32" fill="none"><path d="M16 4C9.37 4 4 9.37 4 16c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.58v-2c-3.34.72-4.04-1.6-4.04-1.6-.54-1.38-1.33-1.74-1.33-1.74-1.08-.74.08-.72.08-.72 1.2.08 1.83 1.22 1.83 1.22 1.06 1.82 2.8 1.3 3.48.98.1-.76.42-1.3.76-1.6-2.66-.3-5.46-1.33-5.46-5.92 0-1.3.46-2.38 1.22-3.22-.12-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.22A11.5 11.5 0 0116 10.5c1.02 0 2.04.14 3 .4 2.28-1.54 3.28-1.22 3.28-1.22.66 1.66.24 2.88.12 3.18.76.84 1.22 1.92 1.22 3.22 0 4.6-2.8 5.62-5.48 5.9.44.38.82 1.12.82 2.26v3.34c0 .32.22.7.82.58C24.56 25.8 28 21.3 28 16c0-6.63-5.37-12-12-12z" fill="#00c3e3"/></svg></div>
+        <span class="product-label">Source</span>
+      </a>
+    </div>
+  </div>
 
   <!-- Video -->
   <section class="home-video-section animate-in">
@@ -694,22 +914,64 @@ footer{
       <p class="section-sub">Built to eliminate manual effort between a legacy document and a final audit-ready output.</p>
     </div>
     <div class="feat-grid animate-in">
-      <div class="feat-card"><div class="feat-num">01</div><div class="feat-title">Migrate Policy</div><div class="feat-body">Upload a legacy .docx, .txt, or .md. AI extracts every field, section, bullet, table, and revision entry — rebuilds it into the target template.</div></div>
-      <div class="feat-card"><div class="feat-num">02</div><div class="feat-title">Create Policy</div><div class="feat-body">Structured intake form with smart date defaults and live preview. Fill in what you know — Midnight handles layout and template fidelity.</div></div>
-      <div class="feat-card"><div class="feat-num">03</div><div class="feat-title">Template Faithful</div><div class="feat-body">Fixed layout engine — locked column widths, exact banner heights, deterministic section rendering regardless of content length.</div></div>
-      <div class="feat-card"><div class="feat-num">04</div><div class="feat-title">Revision History</div><div class="feat-body">Extracted, mapped, and rendered as a hard requirement. Every entry carries through to the final document automatically.</div></div>
-      <div class="feat-card"><div class="feat-num">05</div><div class="feat-title">Live Preview</div><div class="feat-body">Review extracted policy data before generating. See every field, definition, procedure, and revision entry before downloading.</div></div>
-      <div class="feat-card"><div class="feat-num">06</div><div class="feat-title">One-Click Output</div><div class="feat-body">Generate a production-ready .docx in seconds. Download directly — no file management, no local dependencies, no manual formatting.</div></div>
+      <div class="feat-card" style="border-left:2px solid #00c3e3;border-top:1px solid rgba(255,255,255,0.0);border-bottom:1px solid rgba(255,255,255,0.0);border-right:1px solid rgba(255,255,255,0.0);padding-left:20px">
+        <div class="feat-num">01</div><div class="feat-title">Migrate Policy</div>
+        <div class="feat-body">Upload a legacy .docx, .txt, or .md. AI extracts every field, section, bullet, table, and revision entry — rebuilds it into the target template.</div>
+      </div>
+      <div class="feat-card" style="border-left:2px solid #00c3e3;border-top:1px solid rgba(255,255,255,0.0);border-bottom:1px solid rgba(255,255,255,0.0);border-right:1px solid rgba(255,255,255,0.0);padding-left:20px">
+        <div class="feat-num">02</div><div class="feat-title">Create Policy</div>
+        <div class="feat-body">Structured intake with smart date defaults and live preview. Fill in what you know — Midnight handles layout and template fidelity.</div>
+      </div>
+      <div class="feat-card" style="border-left:2px solid #00c3e3;border-top:1px solid rgba(255,255,255,0.0);border-bottom:1px solid rgba(255,255,255,0.0);border-right:1px solid rgba(255,255,255,0.0);padding-left:20px">
+        <div class="feat-num">03</div><div class="feat-title">Framework Mapped</div>
+        <div class="feat-body">Every policy automatically mapped to HIPAA, HiTrust, PCI DSS, ISO 27001, NIST CSF, CoBIT, and SOC 2. Gaps flagged with suggested language.</div>
+      </div>
+      <div class="feat-card" style="border-left:2px solid rgba(255,255,255,0.08);border-top:1px solid rgba(255,255,255,0.0);border-bottom:1px solid rgba(255,255,255,0.0);border-right:1px solid rgba(255,255,255,0.0);padding-left:20px">
+        <div class="feat-num">04</div><div class="feat-title">GRC Summary</div>
+        <div class="feat-body">A second output alongside the policy — full control mapping, gap analysis, and suggested language ready to import into your GRC tool.</div>
+      </div>
+      <div class="feat-card" style="border-left:2px solid rgba(255,255,255,0.08);border-top:1px solid rgba(255,255,255,0.0);border-bottom:1px solid rgba(255,255,255,0.0);border-right:1px solid rgba(255,255,255,0.0);padding-left:20px">
+        <div class="feat-num">05</div><div class="feat-title">Live Preview</div>
+        <div class="feat-body">Review every extracted field, definition, procedure, and framework mapping before generating. No surprises in the final document.</div>
+      </div>
+      <div class="feat-card" style="border-left:2px solid rgba(255,255,255,0.08);border-top:1px solid rgba(255,255,255,0.0);border-bottom:1px solid rgba(255,255,255,0.0);border-right:1px solid rgba(255,255,255,0.0);padding-left:20px">
+        <div class="feat-num">06</div><div class="feat-title">Audit Ready</div>
+        <div class="feat-body">When an auditor asks a question, you have the answer — which policy covers it, which control it maps to, and when it was last reviewed.</div>
+      </div>
     </div>
   </section>
 
   <!-- Stats -->
-  <section class="home-stats animate-in">
-    <div class="stats-inner">
-      <div class="stat-card"><div class="stat-num">13+</div><div class="stat-lbl">Policies migrated in first production run</div></div>
-      <div class="stat-card"><div class="stat-num">80h</div><div class="stat-lbl">Manual workload reduced — accuracy handled by Midnight, not the employee</div></div>
-      <div class="stat-card"><div class="stat-num">3</div><div class="stat-lbl">Strict architecture layers — no bleed-through</div></div>
-      <div class="stat-card"><div class="stat-num">1</div><div class="stat-lbl">Workflow from legacy source to final output</div></div>
+  <section class="animate-in" style="padding:70px 4rem;background:#060e1c;border-top:1px solid rgba(255,255,255,0.06)">
+    <div style="max-width:1280px;margin:0 auto">
+
+      <!-- Section label -->
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.26em;color:#4c607a;text-transform:uppercase;margin-bottom:40px">By the numbers</div>
+
+      <!-- Horizontal stat strip — editorial, not card grid -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+
+        <div class="stat-item" style="border-right:1px solid rgba(255,255,255,0.06)">
+          <div style="font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1;margin-bottom:10px"><span class="count-up" data-target="13" data-suffix="+">0+</span></div>
+          <div style="font-size:13px;color:#4c607a;line-height:1.55;max-width:140px">Policies migrated in first production run</div>
+        </div>
+
+        <div class="stat-item" style="border-right:1px solid rgba(255,255,255,0.06)">
+          <div style="font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1;margin-bottom:10px"><span class="count-up" data-target="80" data-suffix="h">0h</span></div>
+          <div style="font-size:13px;color:#4c607a;line-height:1.55;max-width:160px">Manual workload reduced — accuracy handled by Midnight, not the employee</div>
+        </div>
+
+        <div class="stat-item" style="border-right:1px solid rgba(255,255,255,0.06)">
+          <div style="font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1;margin-bottom:10px"><span class="count-up" data-target="7" data-suffix="+">0+</span></div>
+          <div style="font-size:13px;color:#4c607a;line-height:1.55;max-width:140px">Compliance frameworks mapped automatically on every policy</div>
+        </div>
+
+        <div class="stat-item">
+          <div style="font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1;margin-bottom:10px"><span class="count-up" data-target="2" data-suffix="x">0x</span></div>
+          <div style="font-size:13px;color:#4c607a;line-height:1.55;max-width:140px">Output per migration — policy doc and GRC summary in one run</div>
+        </div>
+
+      </div>
     </div>
   </section>
 
@@ -842,119 +1104,166 @@ footer{
 
   <div class="page-header">
     <h1 class="page-title">Create a Policy</h1>
-    <p class="page-sub">Generate a new policy from structured intake with smart defaults and live preview.</p>
+    <p class="page-sub">Two ways to build. Pick your path.</p>
   </div>
 
-  <div class="create-grid">
+  <!-- Mode selector -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px">
+    <div id="mode-form-card" onclick="switchMode('form')" style="background:var(--s1);border:2px solid var(--cyan);border-radius:14px;padding:24px;cursor:pointer;transition:all .2s">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.18em;color:var(--cyan);text-transform:uppercase;margin-bottom:10px">Option 01</div>
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:6px">Intake Form</div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.6">Fill in the structured form yourself. Full control over every field.</div>
+    </div>
+    <div id="mode-chat-card" onclick="switchMode('chat')" style="background:var(--s1);border:1px solid var(--b0);border-radius:14px;padding:24px;cursor:pointer;transition:all .2s">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.18em;color:var(--t3);text-transform:uppercase;margin-bottom:10px">Option 02</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div style="font-size:28px;line-height:1">&#x1F414;</div>
+        <div style="font-size:17px;font-weight:700;color:#fff">Ask Midnight</div>
+      </div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.6">Chat with Midnight the chicken. Answer questions one at a time and Midnight builds your policy in the background.</div>
+    </div>
+  </div>
 
-    <!-- Left: settings + defaults -->
-    <div>
-      <div class="panel">
-        <div class="panel-title">Settings</div>
-
-        <div class="field">
-          <label class="field-label">Target Template</label>
-          <select id="c-template" class="text-input" onchange="updateDefaults()">
-            <option>Generic Policy Template</option>
-            <option>Wipro HealthPlan Services</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label class="field-label">Logo (optional)</label>
-          <input type="file" id="c-logo" accept=".png,.jpg,.jpeg,.webp">
-        </div>
-
-        <div style="margin-top:20px">
-          <div class="panel-title">Smart Defaults</div>
-          <div class="defaults-chip" id="c-defaults">
-            Fill in Effective Date to see<br>auto-filled date defaults.
+  <!-- FORM MODE -->
+  <div id="create-form-mode">
+    <div class="create-grid">
+      <div>
+        <div class="panel">
+          <div class="panel-title">Settings</div>
+          <div class="field">
+            <label class="field-label">Target Template</label>
+            <select id="c-template" class="text-input" onchange="updateDefaults()">
+              <option>Generic Policy Template</option>
+              <option>Enterprise Policy Template</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Logo (optional)</label>
+            <input type="file" id="c-logo" accept=".png,.jpg,.jpeg,.webp">
+          </div>
+          <div style="margin-top:20px">
+            <div class="panel-title">Smart Defaults</div>
+            <div class="defaults-chip" id="c-defaults">Fill in Effective Date to see auto-filled date defaults.</div>
           </div>
         </div>
-      </div>
-
-      <div class="panel" style="margin-top:14px">
-        <div class="progress-wrap" id="c-progress" style="display:block;margin-bottom:0">
-          <div style="display:none" id="c-progress-inner">
+        <div class="panel" style="margin-top:14px">
+          <div id="c-progress-inner" style="display:none;margin-bottom:12px">
             <div class="progress-track"><div class="progress-fill" id="c-progress-fill"></div></div>
-            <div class="progress-label" id="c-progress-label">Building…</div>
+            <div class="progress-label" id="c-progress-label">Building...</div>
           </div>
+          <div class="alert alert-error"   id="c-error"></div>
+          <div class="alert alert-success" id="c-success"></div>
+          <button class="action-btn action-primary"   onclick="createPreview()">Build Preview</button>
+          <button class="action-btn action-secondary" id="c-btn-generate" onclick="createGenerate()" disabled>Generate Document</button>
         </div>
-        <div class="alert alert-error"   id="c-error"></div>
-        <div class="alert alert-success" id="c-success"></div>
-        <button class="action-btn action-primary"   onclick="createPreview()">Build Preview</button>
-        <button class="action-btn action-secondary" id="c-btn-generate" onclick="createGenerate()" disabled>Generate Document</button>
       </div>
-    </div>
-
-    <!-- Right: intake form + preview -->
-    <div>
-      <div class="panel">
-        <div class="panel-title">Intake</div>
-
-        <div class="form-section-title">Identity</div>
-        <div class="form-row">
-          <div class="field"><label class="field-label">Policy Name</label><input class="text-input" id="c-name" type="text" placeholder="Mobile Device Management…"></div>
-          <div class="field"><label class="field-label">Policy Number</label><input class="text-input" id="c-number" type="text" placeholder="SEC-P020"></div>
+      <div>
+        <div class="panel">
+          <div class="panel-title">Intake</div>
+          <div class="form-section-title">Identity</div>
+          <div class="form-row">
+            <div class="field"><label class="field-label">Policy Name</label><input class="text-input" id="c-name" type="text" placeholder="Access Control Policy"></div>
+            <div class="field"><label class="field-label">Policy Number</label><input class="text-input" id="c-number" type="text" placeholder="SEC-P001"></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label class="field-label">Version</label><input class="text-input" id="c-version" type="text" value="V1.0"></div>
+            <div class="field"><label class="field-label">GRC ID</label><input class="text-input" id="c-grc" type="text" placeholder="Optional"></div>
+          </div>
+          <div class="form-section-title">Dates</div>
+          <div class="form-row">
+            <div class="field"><label class="field-label">Effective Date</label><input class="text-input" id="c-effective" type="text" placeholder="MM/DD/YYYY" oninput="updateDefaults()"></div>
+            <div class="field"><label class="field-label">Supersedes</label><input class="text-input" id="c-supersedes" type="text" placeholder="Optional"></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label class="field-label">Last Reviewed</label><input class="text-input" id="c-reviewed" type="text" placeholder="Defaults to Effective Date"></div>
+            <div class="field"><label class="field-label">Last Revised</label><input class="text-input" id="c-revised" type="text" placeholder="Defaults to Effective Date"></div>
+          </div>
+          <div class="form-section-title">Ownership</div>
+          <div class="field"><label class="field-label">Custodians</label><input class="text-input" id="c-custodians" type="text" placeholder="Policy custodian names"></div>
+          <div class="form-row">
+            <div class="field"><label class="field-label">Owner Name</label><input class="text-input" id="c-owner-name" type="text"></div>
+            <div class="field"><label class="field-label">Owner Title</label><input class="text-input" id="c-owner-title" type="text"></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label class="field-label">Approver Name</label><input class="text-input" id="c-approver-name" type="text"></div>
+            <div class="field"><label class="field-label">Approver Title</label><input class="text-input" id="c-approver-title" type="text"></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label class="field-label">Date Signed</label><input class="text-input" id="c-signed" type="text" placeholder="Defaults to Effective Date"></div>
+            <div class="field"><label class="field-label">Date Approved</label><input class="text-input" id="c-approved" type="text" placeholder="Defaults to Date Signed"></div>
+          </div>
+          <div class="form-section-title">Content</div>
+          <div class="field"><label class="field-label">Purpose and Scope</label><textarea class="text-area" id="c-purpose" style="min-height:100px" placeholder="This policy establishes..."></textarea></div>
+          <div class="field"><label class="field-label">Definitions (Term: Definition, one per line)</label><textarea class="text-area" id="c-definitions"></textarea></div>
+          <div class="field"><label class="field-label">Policy Statement</label><textarea class="text-area" id="c-statement" style="min-height:100px"></textarea></div>
+          <div class="field"><label class="field-label">Procedures (use "- " for bullets)</label><textarea class="text-area" id="c-procedures" style="min-height:140px"></textarea></div>
+          <div class="field"><label class="field-label">Related Policies (one per line)</label><textarea class="text-area" id="c-related"></textarea></div>
+          <div class="field"><label class="field-label">Citations (one per line)</label><textarea class="text-area" id="c-citations"></textarea></div>
         </div>
-        <div class="form-row">
-          <div class="field"><label class="field-label">Version</label><input class="text-input" id="c-version" type="text" value="V1.0"></div>
-          <div class="field"><label class="field-label">GRC ID</label><input class="text-input" id="c-grc" type="text" placeholder="Optional"></div>
-        </div>
-
-        <div class="form-section-title">Dates</div>
-        <div class="form-row">
-          <div class="field"><label class="field-label">Effective Date</label><input class="text-input" id="c-effective" type="text" placeholder="MM/DD/YYYY" oninput="updateDefaults()"></div>
-          <div class="field"><label class="field-label">Supersedes</label><input class="text-input" id="c-supersedes" type="text" placeholder="Optional"></div>
-        </div>
-        <div class="form-row">
-          <div class="field"><label class="field-label">Last Reviewed</label><input class="text-input" id="c-reviewed" type="text" placeholder="Defaults to Effective Date"></div>
-          <div class="field"><label class="field-label">Last Revised</label><input class="text-input" id="c-revised" type="text" placeholder="Defaults to Effective Date"></div>
-        </div>
-
-        <div class="form-section-title">Ownership</div>
-        <div class="field"><label class="field-label">Custodians</label><input class="text-input" id="c-custodians" type="text" placeholder="Chelsea Sanchez, Alexis Taylor"></div>
-        <div class="form-row">
-          <div class="field"><label class="field-label">Owner Name</label><input class="text-input" id="c-owner-name" type="text"></div>
-          <div class="field"><label class="field-label">Owner Title</label><input class="text-input" id="c-owner-title" type="text"></div>
-        </div>
-        <div class="form-row">
-          <div class="field"><label class="field-label">Approver Name</label><input class="text-input" id="c-approver-name" type="text"></div>
-          <div class="field"><label class="field-label">Approver Title</label><input class="text-input" id="c-approver-title" type="text"></div>
-        </div>
-        <div class="form-row">
-          <div class="field"><label class="field-label">Date Signed</label><input class="text-input" id="c-signed" type="text" placeholder="Defaults to Effective Date"></div>
-          <div class="field"><label class="field-label">Date Approved</label><input class="text-input" id="c-approved" type="text" placeholder="Defaults to Date Signed"></div>
-        </div>
-
-        <div class="form-section-title">Content</div>
-        <div class="field"><label class="field-label">Purpose and Scope</label><textarea class="text-area" id="c-purpose" style="min-height:100px" placeholder="This policy establishes…"></textarea></div>
-        <div class="field"><label class="field-label">Definitions (Term: Definition, one per line)</label><textarea class="text-area" id="c-definitions" placeholder="iGel: Linux-based OS for virtual desktops"></textarea></div>
-        <div class="field"><label class="field-label">Policy Statement</label><textarea class="text-area" id="c-statement" style="min-height:100px"></textarea></div>
-        <div class="field"><label class="field-label">Procedures (use "- " for bullets)</label><textarea class="text-area" id="c-procedures" style="min-height:140px"></textarea></div>
-        <div class="field"><label class="field-label">Related Policies (one per line)</label><textarea class="text-area" id="c-related"></textarea></div>
-        <div class="field"><label class="field-label">Citations (one per line)</label><textarea class="text-area" id="c-citations"></textarea></div>
-      </div>
-
-      <!-- Create preview pane -->
-      <div class="panel" style="margin-top:14px" id="c-preview-panel">
-        <div class="panel-title">Preview</div>
-        <div class="preview-pane">
-          <div class="preview-empty" id="c-preview-empty">
-            <div class="preview-empty-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M6 7h8M6 10h8M6 13h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              </svg>
+        <div class="panel" style="margin-top:14px">
+          <div class="panel-title">Preview</div>
+          <div class="preview-pane">
+            <div class="preview-empty" id="c-preview-empty">
+              <div class="preview-empty-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M6 7h8M6 10h8M6 13h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+              <div>Fill in the form and click Build Preview.</div>
             </div>
-            <div>Fill in the form and click<br>Build Preview to review.</div>
+            <div id="c-preview-content" style="display:none"></div>
           </div>
-          <div id="c-preview-content" style="display:none"></div>
         </div>
       </div>
     </div>
-
   </div>
+
+  <!-- CHAT MODE -->
+  <div id="create-chat-mode" style="display:none">
+    <div style="display:grid;grid-template-columns:0.42fr 0.58fr;gap:20px;align-items:start">
+
+      <!-- Status panel -->
+      <div>
+        <div class="panel">
+          <div class="panel-title">Policy in Progress</div>
+          <div style="font-size:12px;line-height:2.2">
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Policy Name</span><span id="cp-name" style="color:var(--t2);text-align:right;max-width:60%">—</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Number</span><span id="cp-number" style="color:var(--t2)">—</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Owner</span><span id="cp-owner" style="color:var(--t2);text-align:right;max-width:60%">—</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Approver</span><span id="cp-approver" style="color:var(--t2);text-align:right;max-width:60%">—</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Effective Date</span><span id="cp-date" style="color:var(--t2)">—</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Purpose</span><span id="cp-purpose" style="color:var(--t2)">—</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--t3)">Frameworks</span><span id="cp-frameworks" style="color:var(--t2)">—</span></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:14px">
+          <div class="alert alert-error"   id="chat-error"></div>
+          <div class="alert alert-success" id="chat-success"></div>
+          <button class="action-btn action-primary"   id="chat-gen-btn" onclick="chatGenerate()" disabled>Generate Policy</button>
+          <button class="action-btn action-secondary" style="margin-top:8px" onclick="resetChat()">Start Over 🐔</button>
+        </div>
+      </div>
+
+      <!-- Chat window -->
+      <div class="panel" style="display:flex;flex-direction:column;height:600px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--b0)">
+          <div style="font-size:28px;line-height:1">&#x1F414;</div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#fff">Midnight</div>
+            <div style="font-size:11px;color:var(--t3);font-family:'DM Mono',monospace">Policy Assistant</div>
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+            <div style="width:7px;height:7px;border-radius:50%;background:var(--green)"></div>
+            <span style="font-size:10px;color:var(--t3);font-family:'DM Mono',monospace">Online</span>
+          </div>
+        </div>
+        <div id="chat-messages" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px;margin-bottom:12px"></div>
+        <div id="chat-quick-replies" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="chat-input" class="text-input" placeholder="Type your answer..." style="flex:1" onkeydown="if(event.key==='Enter')sendChatMessage()">
+          <button onclick="sendChatMessage()" style="background:var(--cyan);color:#000;border:none;border-radius:8px;padding:0 16px;font-weight:700;cursor:pointer;font-size:13px">Send</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 </div><!-- /page-create -->
 
@@ -965,12 +1274,31 @@ const API = 'https://midnight-2-0.onrender.com';
 
 // ── Routing ────────────────────────────────────────────────────────────────
 function goTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  document.getElementById('nav-' + page).classList.add('active');
-  window.scrollTo(0,0);
-  window.location.hash = page;
+  const current = document.querySelector('.page.active');
+  const next    = document.getElementById('page-' + page);
+  if(current === next) return;
+
+  // Fade out current
+  if(current){
+    current.style.opacity    = '0';
+    current.style.transform  = 'translateY(6px)';
+    setTimeout(() => {
+      current.classList.remove('active');
+      current.style.opacity   = '';
+      current.style.transform = '';
+    }, 200);
+  }
+
+  // Fade in next after brief delay
+  setTimeout(() => {
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    next.classList.add('active');
+    document.getElementById('nav-' + page).classList.add('active');
+    window.scrollTo({top:0, behavior:'instant'});
+    window.location.hash = page;
+    // Trigger counter animation when landing on home
+    if(page === 'home') triggerCounters();
+  }, 180);
 }
 
 // Handle hash on load
@@ -1422,10 +1750,495 @@ async function downloadGRC() {
 
 // ── Scroll animations ──────────────────────────────────────────────────────
 const observer = new IntersectionObserver(
-  entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }),
-  {threshold:0.1, rootMargin:'0px 0px -40px 0px'}
+  entries => entries.forEach(e => {
+    if(e.isIntersecting) {
+      e.target.classList.add('visible');
+      // Trigger counters when stat section becomes visible
+      const counters = e.target.querySelectorAll('.count-up');
+      if(counters.length) animateCounters(counters);
+    }
+  }),
+  {threshold:0.2, rootMargin:'0px 0px -40px 0px'}
 );
 document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+
+// Stagger feat-cards on scroll
+const featObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      const cards = e.target.querySelectorAll('.feat-card');
+      cards.forEach((card, i) => {
+        setTimeout(() => {
+          card.style.opacity   = '1';
+          card.style.transform = 'translateX(0)';
+        }, i * 80);
+      });
+    }
+  });
+}, {threshold:0.1});
+
+// Set initial state for stagger
+document.querySelectorAll('.feat-grid').forEach(grid => {
+  grid.querySelectorAll('.feat-card').forEach(card => {
+    card.style.opacity   = '0';
+    card.style.transform = 'translateX(-12px)';
+    card.style.transition= 'opacity .4s ease, transform .4s ease';
+  });
+  featObs.observe(grid);
+});
+
+function animateCounters(els) {
+  els.forEach(el => {
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    const duration = 1200;
+    const start  = performance.now();
+    const step   = (now) => {
+      const pct      = Math.min((now - start) / duration, 1);
+      const eased    = 1 - Math.pow(1 - pct, 3);
+      const current  = Math.floor(eased * target);
+      el.textContent = current + suffix;
+      el.style.color = pct > 0.5 ? '#fff' : '#4c607a';
+      if(pct < 1) requestAnimationFrame(step);
+      else {
+        el.textContent = target + suffix;
+        el.style.color = '#fff';
+        // Suffix in cyan
+        const parent = el.parentElement;
+        parent.innerHTML = '<span class="count-up" style="color:#fff">' + target + '</span><span style="color:#00c3e3">' + suffix + '</span>';
+      }
+    };
+    requestAnimationFrame(step);
+  });
+}
+
+function triggerCounters() {
+  const counters = document.querySelectorAll('.count-up');
+  if(counters.length) animateCounters(counters);
+}
+
+// Run counters on first load if home is active
+if(document.getElementById('page-home').classList.contains('active')){
+  setTimeout(triggerCounters, 800);
+}
+
+// ── Mode switcher ──────────────────────────────────────────────────────────
+function switchMode(mode) {
+  const formMode = document.getElementById('create-form-mode');
+  const chatMode = document.getElementById('create-chat-mode');
+  const formCard = document.getElementById('mode-form-card');
+  const chatCard = document.getElementById('mode-chat-card');
+
+  if(mode === 'form') {
+    formMode.style.display = 'block';
+    chatMode.style.display = 'none';
+    formCard.style.border  = '2px solid var(--cyan)';
+    chatCard.style.border  = '1px solid var(--b0)';
+    formCard.querySelector('[style*="DM Mono"]').style.color = 'var(--cyan)';
+    chatCard.querySelector('[style*="DM Mono"]').style.color = 'var(--t3)';
+  } else {
+    formMode.style.display = 'none';
+    chatMode.style.display = 'block';
+    chatCard.style.border  = '2px solid var(--cyan)';
+    formCard.style.border  = '1px solid var(--b0)';
+    chatCard.querySelector('[style*="DM Mono"]').style.color = 'var(--cyan)';
+    formCard.querySelector('[style*="DM Mono"]').style.color = 'var(--t3)';
+    if(!chatStarted) startChat();
+  }
+}
+
+// ── Midnight the Chicken — Chat Engine ────────────────────────────────────
+let chatStarted   = false;
+let chatData      = {};
+let chatStep      = 0;
+let cPolicyDataChat = null;
+
+const CHAT_STEPS = [
+  {
+    key:      'policy_name',
+    question: "Cluck cluck! What are we calling this policy? 🐔",
+    hint:     "e.g. Access Control Policy, Password Policy, Incident Response...",
+    replies:  ["Access Control Policy", "Password Policy", "Incident Response Policy", "Other (type below)"],
+    update:   (v) => { chatData.policy_name = v; updateChatPanel('cp-name', v); }
+  },
+  {
+    key:      'policy_number',
+    question: "Got it! What policy number should I assign to it?",
+    hint:     "e.g. SEC-P001",
+    replies:  ["SEC-P001", "SEC-P002", "SEC-P010", "I'll type it"],
+    update:   (v) => { chatData.policy_number = v; updateChatPanel('cp-number', v); }
+  },
+  {
+    key:      'owner',
+    question: "Who owns this policy? Give me a name and title. 🐔",
+    hint:     "e.g. Jane Smith, CISO",
+    replies:  [],
+    update:   (v) => {
+      const parts = v.split(',');
+      chatData.owner_name  = parts[0] ? parts[0].trim() : v;
+      chatData.owner_title = parts[1] ? parts[1].trim() : '';
+      updateChatPanel('cp-owner', v);
+    }
+  },
+  {
+    key:      'approver',
+    question: "Who approves it?",
+    hint:     "e.g. Alex Johnson, CIO",
+    replies:  ["Same as owner", "I'll type it"],
+    update:   (v) => {
+      if(v.toLowerCase().includes('same')) {
+        chatData.approver_name  = chatData.owner_name;
+        chatData.approver_title = chatData.owner_title;
+        updateChatPanel('cp-approver', chatData.owner_name);
+      } else {
+        const parts = v.split(',');
+        chatData.approver_name  = parts[0] ? parts[0].trim() : v;
+        chatData.approver_title = parts[1] ? parts[1].trim() : '';
+        updateChatPanel('cp-approver', v);
+      }
+    }
+  },
+  {
+    key:      'effective_date',
+    question: "When does it go into effect? 🐔",
+    hint:     "MM/DD/YYYY",
+    replies:  ["Today", "Start of next month", "I'll type a date"],
+    update:   (v) => {
+      if(v.toLowerCase() === 'today') {
+        const t = new Date();
+        v = (t.getMonth()+1)+'/'+t.getDate()+'/'+t.getFullYear();
+      } else if(v.toLowerCase().includes('next month')) {
+        const t = new Date();
+        t.setMonth(t.getMonth()+1); t.setDate(1);
+        v = (t.getMonth()+1)+'/'+t.getDate()+'/'+t.getFullYear();
+      }
+      chatData.effective_date = v;
+      chatData.last_reviewed  = v;
+      chatData.last_revised   = v;
+      chatData.date_signed    = v;
+      chatData.date_approved  = v;
+      updateChatPanel('cp-date', v);
+    }
+  },
+  {
+    key:      'purpose',
+    question: "In a sentence or two, what does this policy cover and why does it exist? Bwawk! 🐔",
+    hint:     "This policy establishes...",
+    replies:  [],
+    update:   (v) => {
+      chatData.purpose = v;
+      updateChatPanel('cp-purpose', v.slice(0,40)+'...');
+    }
+  },
+  {
+    key:      'frameworks',
+    question: "Which compliance frameworks should I map this to? Pick all that apply.",
+    hint:     "You can select multiple or type custom ones",
+    replies:  ["HIPAA", "HiTrust", "PCI DSS", "ISO 27001", "NIST CSF", "All of the above", "Skip for now"],
+    multi:    true,
+    update:   (v) => {
+      chatData._frameworks = v;
+      updateChatPanel('cp-frameworks', v);
+    }
+  },
+  {
+    key:      'policy_statement',
+    question: "Last one — give me a one or two sentence policy statement. This is the core rule. 🐔",
+    hint:     "It is the policy of [org] that...",
+    replies:  [],
+    update:   (v) => { chatData.policy_statement = v; }
+  },
+];
+
+let selectedReplies = [];
+
+function startChat() {
+  chatStarted = true;
+  chatStep    = 0;
+  chatData    = {
+    version:          'V1.0',
+    grc_id:           '',
+    supersedes:       '',
+    custodians:       '',
+    applicable_to:    {hps_inc:false, agency:true, corporate:true, govt_affairs:false, legal_review:false},
+    policy_types:     {carrier_specific:false, cross_carrier:false, global:true, on_off_hix:false},
+    line_of_business: {all_lobs:true, specific_lob:'', specific_lob_checked:false},
+    definitions:      {},
+    procedures:       [],
+    related_policies: [],
+    citations:        [],
+    revision_history: [],
+    template_name:    'Generic Policy Template',
+  };
+
+  document.getElementById('chat-messages').innerHTML = '';
+  document.getElementById('chat-quick-replies').innerHTML = '';
+
+  // Opening message
+  setTimeout(() => addMessage('bot', "Hey there! I'm Midnight 🐔 I'm going to help you build a compliance policy. It'll take about 2 minutes. Ready?"), 400);
+  setTimeout(() => {
+    addQuickReplies(["Let's go!", "Tell me more"]);
+  }, 1000);
+
+  document.getElementById('chat-input').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') sendChatMessage();
+  });
+}
+
+function addMessage(who, text) {
+  const msgs  = document.getElementById('chat-messages');
+  const div   = document.createElement('div');
+  const isBot = who === 'bot';
+
+  div.style.cssText = `
+    display:flex;gap:8px;align-items:flex-end;
+    ${isBot ? 'flex-direction:row' : 'flex-direction:row-reverse'}
+  `;
+
+  const avatar = isBot
+    ? '<div style="font-size:20px;line-height:1;flex-shrink:0;margin-bottom:2px">&#x1F414;</div>'
+    : '<div style="width:24px;height:24px;border-radius:50%;background:var(--s3);border:1px solid var(--b1);flex-shrink:0"></div>';
+
+  const bubble = document.createElement('div');
+  bubble.style.cssText = `
+    max-width:78%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;
+    ${isBot
+      ? 'background:var(--s2);color:var(--t1);border-bottom-left-radius:3px'
+      : 'background:var(--cyan);color:#000;font-weight:500;border-bottom-right-radius:3px'}
+  `;
+  bubble.textContent = text;
+
+  div.innerHTML = avatar;
+  div.appendChild(bubble);
+
+  // Typing indicator for bot
+  if(isBot) {
+    const typing = document.createElement('div');
+    typing.style.cssText = 'display:flex;gap:8px;align-items:flex-end';
+    typing.innerHTML = '<div style="font-size:20px">&#x1F414;</div><div style="background:var(--s2);padding:10px 14px;border-radius:12px;color:var(--t3);font-size:13px">...</div>';
+    msgs.appendChild(typing);
+    msgs.scrollTop = msgs.scrollHeight;
+    setTimeout(() => {
+      msgs.removeChild(typing);
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }, 600);
+  } else {
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+}
+
+function addQuickReplies(options, multi=false) {
+  const qr = document.getElementById('chat-quick-replies');
+  qr.innerHTML = '';
+  selectedReplies = [];
+
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.style.cssText = `
+      background:var(--s2);color:var(--t1);border:1px solid var(--b1);
+      border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;
+      transition:all .15s ease;font-family:'Inter',sans-serif;
+    `;
+    btn.onmouseover = () => { btn.style.borderColor = 'var(--cyan)'; btn.style.color = 'var(--cyan)'; };
+    btn.onmouseout  = () => {
+      if(!selectedReplies.includes(opt)) {
+        btn.style.borderColor = 'var(--b1)'; btn.style.color = 'var(--t1)';
+      }
+    };
+    btn.onclick = () => {
+      if(multi) {
+        if(selectedReplies.includes(opt)) {
+          selectedReplies = selectedReplies.filter(r => r !== opt);
+          btn.style.background    = 'var(--s2)';
+          btn.style.borderColor   = 'var(--b1)';
+          btn.style.color         = 'var(--t1)';
+        } else {
+          selectedReplies.push(opt);
+          btn.style.background    = 'rgba(0,195,227,0.12)';
+          btn.style.borderColor   = 'var(--cyan)';
+          btn.style.color         = 'var(--cyan)';
+        }
+        // Confirm button for multi-select
+        let confirm = document.getElementById('qr-confirm');
+        if(!confirm) {
+          confirm = document.createElement('button');
+          confirm.id = 'qr-confirm';
+          confirm.textContent = 'Confirm';
+          confirm.style.cssText = `
+            background:var(--cyan);color:#000;border:none;border-radius:20px;
+            padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;
+          `;
+          confirm.onclick = () => processReply(selectedReplies.join(', '));
+          qr.appendChild(confirm);
+        }
+      } else {
+        processReply(opt);
+      }
+    };
+    qr.appendChild(btn);
+  });
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const val   = input.value.trim();
+  if(!val) return;
+  input.value = '';
+  document.getElementById('chat-quick-replies').innerHTML = '';
+  processReply(val);
+}
+
+function processReply(val) {
+  addMessage('user', val);
+
+  if(chatStep === 0 && (val.toLowerCase().includes("let's go") || val.toLowerCase().includes('lets go'))) {
+    setTimeout(() => askStep(0), 800);
+    return;
+  }
+  if(chatStep === 0 && val.toLowerCase().includes('more')) {
+    setTimeout(() => addMessage('bot', "I ask you a few questions about your policy — name, owner, dates, purpose, frameworks. Then I build the whole thing for you. Easy! 🐔"), 600);
+    setTimeout(() => addQuickReplies(["Let's go!"]), 1400);
+    return;
+  }
+
+  // Save answer
+  if(chatStep > 0 && chatStep <= CHAT_STEPS.length) {
+    const step = CHAT_STEPS[chatStep - 1];
+    step.update(val);
+  }
+
+  chatStep++;
+  if(chatStep <= CHAT_STEPS.length) {
+    setTimeout(() => askStep(chatStep - 1), 700);
+  } else {
+    finishChat();
+  }
+}
+
+function askStep(idx) {
+  const step = CHAT_STEPS[idx];
+  addMessage('bot', step.question);
+  if(step.hint) {
+    setTimeout(() => {
+      const qr = document.getElementById('chat-quick-replies');
+      const hint = document.createElement('div');
+      hint.style.cssText = 'font-size:11px;color:var(--t3);width:100%;font-family:"DM Mono",monospace;padding:0 2px';
+      hint.textContent = step.hint;
+      qr.innerHTML = '';
+      qr.appendChild(hint);
+      if(step.replies && step.replies.length) {
+        addQuickReplies(step.replies, step.multi || false);
+      }
+    }, 700);
+  } else if(step.replies && step.replies.length) {
+    setTimeout(() => addQuickReplies(step.replies, step.multi || false), 700);
+  }
+}
+
+function updateChatPanel(id, val) {
+  const el = document.getElementById(id);
+  if(el) { el.textContent = val; el.style.color = 'var(--t1)'; }
+}
+
+function finishChat() {
+  // Build final POLICY_DATA from chatData
+  cPolicyDataChat = {
+    policy_name:      chatData.policy_name     || '',
+    policy_number:    chatData.policy_number   || '',
+    version:          chatData.version         || 'V1.0',
+    grc_id:           '',
+    supersedes:       '',
+    effective_date:   chatData.effective_date  || '',
+    last_reviewed:    chatData.last_reviewed   || '',
+    last_revised:     chatData.last_revised    || '',
+    custodians:       '',
+    owner_name:       chatData.owner_name      || '',
+    owner_title:      chatData.owner_title     || '',
+    approver_name:    chatData.approver_name   || '',
+    approver_title:   chatData.approver_title  || '',
+    date_signed:      chatData.date_signed     || '',
+    date_approved:    chatData.date_approved   || '',
+    applicable_to:    chatData.applicable_to,
+    policy_types:     chatData.policy_types,
+    line_of_business: chatData.line_of_business,
+    purpose:          chatData.purpose         || '',
+    definitions:      {},
+    policy_statement: chatData.policy_statement || '',
+    procedures:       [],
+    related_policies: [],
+    citations:        [],
+    revision_history: [],
+    template_name:    'Generic Policy Template',
+  };
+
+  setTimeout(() => {
+    addMessage('bot', "Cluck cluck! I've got everything I need. Your policy is ready to generate! 🐔🎉");
+    document.getElementById('chat-gen-btn').disabled = false;
+    document.getElementById('chat-quick-replies').innerHTML = '';
+  }, 600);
+}
+
+async function chatGenerate() {
+  if(!cPolicyDataChat) return;
+  const btn = document.getElementById('chat-gen-btn');
+  btn.disabled = true; btn.textContent = 'Generating...';
+
+  addMessage('bot', "On it! Building your policy now... 🐔");
+
+  try {
+    const res = await fetch(API + '/api/create/generate', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ policy_data: cPolicyDataChat })
+    });
+
+    if(!res.ok) {
+      const raw = await res.text();
+      let p; try{p=JSON.parse(raw);}catch{p={detail:raw};}
+      document.getElementById('chat-error').textContent = p.detail || 'Generate failed.';
+      document.getElementById('chat-error').style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Generate Policy';
+      return;
+    }
+
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const name = (cPolicyDataChat.policy_number||'Policy') + ' ' + (cPolicyDataChat.policy_name||'') + ' ' + (cPolicyDataChat.version||'') + '-NEW.docx';
+    a.href = url; a.download = name.trim(); a.click();
+    URL.revokeObjectURL(url);
+
+    addMessage('bot', "Done! Your policy has been downloaded. Nice work — bwawk! 🐔✅");
+    document.getElementById('chat-success').textContent = '✓ Policy generated and downloaded.';
+    document.getElementById('chat-success').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('chat-error').textContent = 'Generate failed: ' + e.message;
+    document.getElementById('chat-error').style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Generate Policy';
+  }
+}
+
+function resetChat() {
+  chatStarted = false;
+  chatStep    = 0;
+  chatData    = {};
+  cPolicyDataChat = null;
+  document.getElementById('chat-messages').innerHTML = '';
+  document.getElementById('chat-quick-replies').innerHTML = '';
+  document.getElementById('chat-gen-btn').disabled = true;
+  document.getElementById('chat-error').style.display   = 'none';
+  document.getElementById('chat-success').style.display = 'none';
+  ['cp-name','cp-number','cp-owner','cp-approver','cp-date','cp-purpose','cp-frameworks'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.textContent = '—'; el.style.color = 'var(--t3)'; }
+  });
+  startChat();
+}
 
 // Set today as default effective date
 const today = new Date();
