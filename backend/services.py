@@ -25,6 +25,28 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from groq import Groq
 from hps_policy_migration_builder import build_policy_document
 
+# ── Template registry ─────────────────────────────────────────────────────────
+# Each template is a standalone module in the templates/ directory.
+# Add new templates here — nothing else needs to change.
+try:
+    from templates.template_generic import build_document as _build_generic
+    _TEMPLATES_AVAILABLE = True
+except ImportError:
+    _TEMPLATES_AVAILABLE = False
+    _build_generic = None
+
+TEMPLATE_REGISTRY = {
+    # key (template_name in POLICY_DATA)  →  builder function
+    "Generic Policy Template":   "_generic",
+    "Generic":                   "_generic",
+    "Enterprise Policy Template":"_generic",
+    # Future templates:
+    # "Healthcare":  _build_healthcare,
+    # "Finance":     _build_finance,
+    # "Tech":        _build_tech,
+    # "Legal":       _build_legal,
+}
+
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL   = "llama-3.3-70b-versatile"
@@ -524,21 +546,53 @@ def save_logo_bytes(filename: str, file_bytes: bytes) -> str:
 # ── Policy Doc Builder ────────────────────────────────────────────────────────
 
 def build_output_doc(policy_data: dict, logo_path: str | None = None) -> tuple[str, bytes]:
-    name   = policy_data.get("policy_name",   "Policy")
-    number = policy_data.get("policy_number", "SEC-P")
-    ver    = policy_data.get("version",       "V1.0")
-    fname  = f"{number} {name} {ver}-NEW.docx"
+    """
+    Route to the correct template builder based on policy_data["template_name"].
+
+    Routing logic:
+      "Wipro HealthPlan Services"  → hps_policy_migration_builder (legacy, client-specific)
+      Everything else              → templates/template_generic.py (generic minimal)
+      Future: "Healthcare" etc.   → templates/template_healthcare.py etc.
+    """
+    name          = policy_data.get("policy_name",    "Policy")
+    number        = policy_data.get("policy_number",  "POL")
+    ver           = policy_data.get("version",        "V1.0")
+    template_name = policy_data.get("template_name",  "Generic Policy Template")
+    logo_pos      = policy_data.get("logo_position",  "left")
+    fname         = f"{number} {name} {ver}-NEW.docx"
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         tmp_path = tmp.name
+
     try:
-        build_policy_document(policy_data, tmp_path, logo_path=logo_path)
+        registry_key = TEMPLATE_REGISTRY.get(template_name, "_generic")
+
+        if template_name == "Wipro HealthPlan Services":
+            # Legacy HPS builder — kept for existing client
+            build_policy_document(policy_data, tmp_path, logo_path=logo_path)
+
+        elif registry_key == "_generic" and _TEMPLATES_AVAILABLE and _build_generic:
+            # Generic minimal template
+            _build_generic(
+                policy_data,
+                tmp_path,
+                logo_path=logo_path,
+                logo_position=logo_pos,
+            )
+
+        else:
+            # Fallback to HPS builder if template module not found
+            print(f"[WARN] Template '{template_name}' not found in registry — using HPS builder")
+            build_policy_document(policy_data, tmp_path, logo_path=logo_path)
+
         with open(tmp_path, "rb") as f:
             doc_bytes = f.read()
+
     finally:
         try:
             os.unlink(tmp_path)
         except Exception:
             pass
 
+    print(f"BUILD  |  template: {template_name}  |  file: {fname}")
     return fname, doc_bytes
