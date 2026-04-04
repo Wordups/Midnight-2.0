@@ -1,6 +1,4 @@
-import tempfile
 import uuid
-
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +12,6 @@ from services import (
 
 app = FastAPI()
 
-# allow your local HTML file to call API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# store temp logos between preview → generate
 LOGO_STORE = {}
 
 
@@ -42,11 +38,11 @@ async def preview(
         source_bytes = await source_file.read()
         source_text = get_uploaded_text(source_file.filename, source_bytes)
 
-        # 🔍 DEBUG LOGGING
-        print("\n--- DEBUG EXTRACTION ---")
+        print("\\n--- DEBUG EXTRACTION ---")
+        print("Filename:", source_file.filename)
         print("Length:", len(source_text.strip()))
-        print("Preview:", source_text[:500])
-        print("------------------------\n")
+        print("Preview:", source_text[:1000])
+        print("--- END DEBUG ---\\n")
 
         if len(source_text.strip()) < 5:
             raise HTTPException(
@@ -68,6 +64,8 @@ async def preview(
             "logo_token": logo_token
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -82,7 +80,6 @@ async def generate(payload: dict):
             raise HTTPException(status_code=400, detail="Missing policy_data")
 
         logo_path = LOGO_STORE.get(logo_token)
-
         filename, file_bytes = build_output_doc(policy_data, logo_path)
 
         return StreamingResponse(
@@ -93,5 +90,7 @@ async def generate(payload: dict):
             }
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
