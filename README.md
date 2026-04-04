@@ -1,11 +1,10 @@
-[README (3).md](https://github.com/user-attachments/files/26475625/README.3.md)
 # MIDNIGHT
-### Policy Migration Engine 
+### Policy Migration Engine — by Takeoff
 
 > Convert legacy policy documents into audit-ready, template-faithful Word output. No manual reconstruction.
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.32%2B-red?style=flat-square)](https://streamlit.io)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green?style=flat-square)](https://fastapi.tiangolo.com/)
 [![Groq](https://img.shields.io/badge/Groq-LLaMA%203.3%2070B-orange?style=flat-square)](https://groq.com)
 [![License](https://img.shields.io/badge/License-Private-lightgrey?style=flat-square)]()
 
@@ -15,117 +14,136 @@
 
 Midnight is a document migration and policy creation engine built for compliance and policy operations teams.
 
-**Migrate a Policy** — Upload a legacy `.docx`, `.txt`, or `.md` file. AI extracts every field, section, bullet, table, and revision entry, then rebuilds it into the target template.
+### Migrate a Policy
+Upload a legacy `.docx`, `.txt`, or `.md` file.  
+AI extracts every field, section, bullet, table, and revision entry, then rebuilds it into the target template.
 
-**Create a Policy** — Structured intake form with smart date defaults and live preview. Fill in what you know — Midnight handles layout and template fidelity.
+### Create a Policy
+Structured intake → mapped into a fixed schema → rendered into a template-faithful Word document.
 
 ---
 
-## How it works
+## Architecture
 
-Midnight uses three strictly separated layers. No bleed-through between stages.
+Midnight uses three strictly separated layers:
+
+```
+Frontend (HTML UI)
+        ↓
+FastAPI Backend
+        ↓
+Document Engine (Builder)
+```
+
+No UI logic inside the backend.  
+No extraction logic inside the builder.  
+Each layer does one job.
+
+---
+
+## Processing Pipeline
 
 ```
 Layer 1 — Extraction
-  Read source document → pull all fields, sections, bullets,
-  tables, revision history → output structured POLICY_DATA
+  Read source document → extract all content → output POLICY_DATA
 
 Layer 2 — Mapping
   Normalize into fixed schema → validate required fields
-  Preserve original wording exactly — no paraphrasing
+  Preserve original wording exactly (no paraphrasing)
 
 Layer 3 — Rendering
-  Rebuild into target template → handle layout only
+  Build final .docx → strict layout engine
   Deterministic output regardless of content length
+```
+
+---
+
+## Project Structure
+
+```
+Midnight-2.0/
+│
+├── backend/
+│   ├── api.py
+│   ├── services.py
+│   ├── hps_policy_migration_builder.py
+│   ├── requirements.txt
+│
+├── frontend/
+│   ├── index.html
+│
+├── download/ (optional)
+└── README.md
 ```
 
 ---
 
 ## Stack
 
-| Component | Technology |
-|-----------|-----------|
-| UI | Streamlit |
-| AI Extraction | Groq — LLaMA 3.3 70B Versatile |
+| Layer | Technology |
+|------|-----------|
+| Frontend | HTML / JavaScript |
+| Backend | FastAPI |
+| AI Extraction | Groq — LLaMA 3.3 70B |
 | Document Output | python-docx |
-| Hosting | Streamlit Cloud |
 
 ---
 
-## Files
+## How it works
 
 ```
-midnight/
-├── app.py                          # Streamlit UI — three pages
-├── hps_policy_migration_builder.py # Strict layout engine — DOCX generation
-├── requirements.txt                # Dependencies
-└── README.md
+Upload Policy → Extract → Preview → Generate → Download
 ```
+
+Everything runs through the browser → API → document engine.
 
 ---
 
-## Requirements
-
-```
-streamlit>=1.32.0
-groq>=0.4.0
-python-docx>=1.1.0
-```
-
----
-
-## Local setup
+## Backend Setup (Local)
 
 ```bash
-git clone https://github.com/wordups/midnight
-cd midnight
+cd backend
 pip install -r requirements.txt
-streamlit run app.py
+set GROQ_API_KEY=your_key
+uvicorn api:app --reload
 ```
 
-Set your Groq API key in `.streamlit/secrets.toml`:
+Then open:
 
-```toml
-GROQ_API_KEY = "gsk_..."
+```
+frontend/index.html
 ```
 
 ---
 
-## Architecture notes
+## Key Design Decisions
 
-**Builder design decisions:**
-
-- Banner row locked at exact 720-twip height — never expands
-- All column widths fixed in `dxa` units — content never shifts layout
-- Section content rows flow freely across pages — no orphaning
-- Revision history handles `tuple`, `list`, and `dict` entries
-- Logo renders from path if valid, falls back to text — never crashes
-- All file I/O uses `/tmp` — safe on any host
-
-**Extraction rules enforced by prompt:**
-
-- No summarization or paraphrasing
-- Original wording preserved
-- All procedure types classified: `para`, `heading`, `bullet`, `sub-bullet`, `bold_intro`, `bold_intro_semi`, `empty`
-- Revision history treated as hard requirement — must extract, map, and render
-
----
-
-## Methodology
-
-Midnight is part of the **Takeoff** governance and compliance platform.
-
-```
-Pre-Flight → Boarding → Takeoff → In-Flight → Landing
-```
-
-Midnight sits at **Boarding** — getting documentation structured and compliant before the rest of the workflow runs.
+- Layout engine is deterministic (fixed widths, controlled rows)
+- Banner height and structure are locked
+- Section content flows across pages without breaking layout
+- Revision history is always extracted and rendered
+- Extraction preserves original wording — no summarization
+- Logo handling is optional and never breaks generation
+- Temporary file handling is isolated and safe
 
 ---
 
 ## Status
 
-Production. 13+ policies migrated in first batch run.
+Midnight 2.0 — Active Development  
+Core migration pipeline operational
+
+---
+
+## Takeoff Platform
+
+Midnight is part of the **Takeoff** compliance system:
+
+```
+Pre-Flight → Boarding → Takeoff → In-Flight → Landing
+```
+
+Midnight sits at **Boarding** — preparing documentation for execution and audit readiness.
 
 ---
 
