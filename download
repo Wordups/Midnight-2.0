@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Midnight 2.0</title>
+</head>
+<body style="background:#020916;color:white;font-family:sans-serif;padding:40px">
+
+<h1>Midnight 2.0</h1>
+
+<input type="file" id="file"><br><br>
+<input type="file" id="logo"><br><br>
+
+<select id="template">
+  <option>Generic Policy Template</option>
+</select><br><br>
+
+<button onclick="preview()">Transform</button>
+<button onclick="generate()">Generate</button>
+
+<pre id="output"></pre>
+
+<script>
+let data = null;
+let logo = null;
+
+async function preview() {
+  const f = document.getElementById("file").files[0];
+  const l = document.getElementById("logo").files[0];
+  const t = document.getElementById("template").value;
+
+  const form = new FormData();
+  form.append("source_file", f);
+  form.append("template_name", t);
+  if (l) form.append("logo_file", l);
+
+  const res = await fetch("http://127.0.0.1:8000/api/migrate/preview", {
+    method: "POST",
+    body: form
+  });
+
+  const json = await res.json();
+  data = json.policy_data;
+  logo = json.logo_token;
+
+  document.getElementById("output").textContent =
+    JSON.stringify(data, null, 2);
+}
+
+async function generate() {
+  const res = await fetch("http://127.0.0.1:8000/api/migrate/generate", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      policy_data: data,
+      logo_token: logo
+    })
+  });
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "policy.docx";
+  a.click();
+}
+</script>
+
+</body>
+</html>

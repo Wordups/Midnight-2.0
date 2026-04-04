@@ -1,2 +1,1 @@
-# Midnight-2.0
-Fine tuning Midnight from break to launch 
+GROQ_API_KEY=your_key_here
