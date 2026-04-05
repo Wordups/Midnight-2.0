@@ -3,3 +3,4 @@ uvicorn
 groq
 python-docx
 python-multipart
+supabase
