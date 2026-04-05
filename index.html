@@ -387,12 +387,7 @@ footer{
 
 /* ── RESPONSIVE ─── */
 @media(max-width:900px){
-  .hero{grid-template-columns:1fr!important;min-height:auto!important}
-  .hero-left{padding:48px 24px 36px!important;order:2}
-  .hero-right{min-height:380px!important;order:1;border-left:none!important;border-bottom:1px solid var(--b0)}
-  .hero-right img{object-position:center 10%!important}
-  .hero-badge-overlay{bottom:16px!important;left:16px!important}
-  .hero-title{font-size:clamp(60px,16vw,96px)!important}
+  .hero-title{font-size:clamp(56px,15vw,90px)!important}
   .hero-btns{flex-direction:column!important}
   .hero-btns .btn-primary,.hero-btns .btn-outline{width:100%!important;text-align:center!important}
   .ent-grid{grid-template-columns:1fr!important}
@@ -418,6 +413,7 @@ footer{
   .hero-badge-overlay .cluck{font-size:16px!important}
 }
 </style>
+<link rel="preload" href="midnight-chicken.mp4" as="video" type="video/mp4">
 </head>
 <body>
 
@@ -476,18 +472,34 @@ footer{
 ══════════════════════════════ -->
 <div class="page active" id="page-home">
 
-  <section class="hero">
-    <!-- Left -->
-    <div class="hero-left">
-      <div class="eyebrow hero-eyebrow">Enterprise Policy Intelligence · Takeoff</div>
-      <h1 class="hero-title">MID<br><span class="hl">NIGHT</span></h1>
-      <div class="hero-tagline">Policy Intelligence Engine</div>
-      <p class="hero-sub"><strong>Policies faster. Audits easier. You happier.</strong><br>Create compliance-ready policies mapped to 7 frameworks. Migrate legacy documents. Get a GRC summary. All in minutes.</p>
-      <div class="hero-btns">
+  <section style="display:flex;flex-direction:column;background:var(--bg)">
+
+    <!-- Chicken — full width, tall, on top -->
+    <div style="position:relative;width:100%;height:75vw;max-height:640px;min-height:300px;overflow:hidden;border-bottom:1px solid var(--b0)">
+      <video autoplay muted loop playsinline
+             style="width:100%;height:100%;object-fit:cover;object-position:center 12%;opacity:0;animation:fadeIn 1.2s ease .3s forwards">
+        <source src="midnight-chicken.mp4" type="video/mp4">
+        <img src="chicken.png" alt="Midnight — Chief Compliance Officer"
+             style="width:100%;height:100%;object-fit:cover;object-position:center 12%">
+      </video>
+      <div style="position:absolute;bottom:24px;left:24px;background:rgba(5,10,18,0.88);border:1px solid var(--cyan-bd);border-radius:10px;padding:14px 20px;backdrop-filter:blur(16px);opacity:0;animation:fadeUp 1s ease .9s forwards">
+        <div style="font-family:var(--display);font-size:22px;letter-spacing:0.1em;color:var(--cyan)">CLUCK. COMPLIANT.</div>
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.18em;color:var(--t3);margin-top:3px;text-transform:uppercase">Chief Compliance Officer</div>
+      </div>
+    </div>
+
+    <!-- Text below -->
+    <div style="display:flex;flex-direction:column;justify-content:center;padding:clamp(32px,6vw,60px) clamp(20px,8vw,80px) clamp(40px,7vw,70px);position:relative">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 60% 50%,rgba(0,212,245,0.04),transparent 60%);pointer-events:none"></div>
+      <div class="eyebrow hero-eyebrow" style="opacity:0;animation:fadeUp .7s ease .1s forwards">Enterprise Policy Intelligence · Takeoff</div>
+      <h1 class="hero-title" style="opacity:0;animation:fadeUp .8s ease .2s forwards">MID<br><span class="hl">NIGHT</span></h1>
+      <div class="hero-tagline" style="opacity:0;animation:fadeUp .8s ease .3s forwards">Policy Intelligence Engine</div>
+      <p class="hero-sub" style="opacity:0;animation:fadeUp .8s ease .35s forwards"><strong>Policies faster. Audits easier. You happier.</strong><br>Create compliance-ready policies mapped to 7 frameworks. Migrate legacy documents. Get a GRC summary. All in minutes.</p>
+      <div class="hero-btns" style="opacity:0;animation:fadeUp .8s ease .4s forwards">
         <button class="btn-primary" onclick="goTo('enterprise')">Request Enterprise Access →</button>
         <button class="btn-outline" onclick="goTo('platform')">See the Platform</button>
       </div>
-      <div class="hero-badges">
+      <div class="hero-badges" style="opacity:0;animation:fadeUp .8s ease .5s forwards">
         <span class="badge">HIPAA</span><span class="badge">HiTrust</span>
         <span class="badge">PCI DSS</span><span class="badge">ISO 27001</span>
         <span class="badge">NIST CSF</span><span class="badge">CoBIT</span>
@@ -495,14 +507,6 @@ footer{
       </div>
     </div>
 
-    <!-- Right — Chicken -->
-    <div class="hero-right">
-      <img src="chicken.png" alt="Midnight — Chief Compliance Officer">
-      <div class="hero-badge-overlay">
-        <div class="cluck">CLUCK. COMPLIANT.</div>
-        <div class="sub">Chief Compliance Officer</div>
-      </div>
-    </div>
   </section>
 
   <!-- Quick nav strip -->
