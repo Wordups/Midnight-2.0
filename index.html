@@ -180,7 +180,7 @@ nav{
 }
 .hero-right img{
   width:100%;height:100%;
-  object-fit:cover;object-position:center top;
+  object-fit:cover;object-position:center 15%;
   opacity:0;animation:fadeIn 1.2s ease .6s forwards;
 }
 .hero-badge-overlay{
@@ -387,17 +387,35 @@ footer{
 
 /* ── RESPONSIVE ─── */
 @media(max-width:900px){
-  .hero{grid-template-columns:1fr!important}
-  .hero-right{min-height:400px}
+  .hero{grid-template-columns:1fr!important;min-height:auto!important}
+  .hero-left{padding:48px 24px 36px!important;order:2}
+  .hero-right{min-height:380px!important;order:1;border-left:none!important;border-bottom:1px solid var(--b0)}
+  .hero-right img{object-position:center 10%!important}
+  .hero-badge-overlay{bottom:16px!important;left:16px!important}
+  .hero-title{font-size:clamp(60px,16vw,96px)!important}
+  .hero-btns{flex-direction:column!important}
+  .hero-btns .btn-primary,.hero-btns .btn-outline{width:100%!important;text-align:center!important}
   .ent-grid{grid-template-columns:1fr!important}
   .pipeline{grid-template-columns:1fr!important}
+  .pipeline::before{display:none!important}
   .feat-grid{grid-template-columns:1fr!important}
   .strip{grid-template-columns:repeat(2,1fr)!important}
   .stats{grid-template-columns:repeat(2,1fr)!important}
-  .section,.section-wide{padding:60px 1.5rem!important}
+  .stat{padding:24px 16px!important}
+  .stat-num{font-size:42px!important}
+  .section,.section-wide{padding:48px 1.25rem!important}
   nav{padding:0 1.25rem}
   .nav-links{display:none}
   .form-row{grid-template-columns:1fr!important}
+  .nav-wordmark{font-size:18px!important}
+}
+
+@media(max-width:480px){
+  .hero-right{min-height:300px!important}
+  .strip{grid-template-columns:1fr 1fr!important}
+  .stats{grid-template-columns:1fr 1fr!important}
+  .ticker-inner span{padding:0 12px!important;font-size:10px!important}
+  .hero-badge-overlay .cluck{font-size:16px!important}
 }
 </style>
 </head>
