@@ -834,7 +834,7 @@ async function createGenerate(){
 }
 
 // ── Bird Talk ──────────────────────────────────────────────────────────
-let chatStarted=false,chatStep=0,chatData={},cPolicyDataChat=null,selectedReplies=[];
+let chatStarted=false,chatStep=0,chatIntroComplete=false,chatData={},cPolicyDataChat=null,selectedReplies=[];
 
 const CHAT_STEPS=[
   {key:'policy_name',question:"Cluck cluck! What are we calling this policy? 🐔",hint:"e.g. Access Control Policy, Password Policy...",replies:["Access Control Policy","Password Policy","Incident Response Policy","Data Classification Policy","Other (type below)"],update:(v)=>{chatData.policy_name=v;updateChatPanel('cp-name',v);}},
@@ -848,7 +848,7 @@ const CHAT_STEPS=[
 ];
 
 function startChat(){
-  chatStarted=true;chatStep=0;selectedReplies=[];
+  chatStarted=true;chatStep=0;chatIntroComplete=false;selectedReplies=[];
   chatData={version:'V1.0',grc_id:'',supersedes:'',custodians:'',applicable_to:{hps_inc:false,agency:true,corporate:true,govt_affairs:false,legal_review:false},policy_types:{carrier_specific:false,cross_carrier:false,global:true,on_off_hix:false},line_of_business:{all_lobs:true,specific_lob:'',specific_lob_checked:false},definitions:{},procedures:[],related_policies:[],citations:[],revision_history:[],template_name:'Generic Policy Template'};
   document.getElementById('chat-messages').innerHTML='';
   document.getElementById('chat-quick-replies').innerHTML='';
@@ -905,16 +905,33 @@ function sendChatMessage(){
 }
 function processReply(val){
   addMessage('user',val);
-  if(chatStep===0){
-    if(val.toLowerCase().includes("let's go")||val.toLowerCase().includes('lets go')){setTimeout(()=>askStep(0),800);return;}
-    if(val.toLowerCase().includes('more')){setTimeout(()=>addMessage('bot',"I ask about policy name, owner, dates, purpose, and frameworks. Then I build it for you. Easy! 🐔"),600);setTimeout(()=>addQuickReplies(["Let's go!"]),1400);return;}
+  // Intro state — waiting for "let's go"
+  if(!chatIntroComplete){
+    if(val.toLowerCase().includes("let's go")||val.toLowerCase().includes('lets go')||val.toLowerCase().includes('go')){
+      chatIntroComplete=true;
+      setTimeout(()=>askStep(0),800);
+      return;
+    }
+    if(val.toLowerCase().includes('more')){
+      setTimeout(()=>addMessage('bot',"I ask about policy name, owner, dates, purpose, and frameworks. Then I build it for you. Easy! 🐔"),600);
+      setTimeout(()=>addQuickReplies(["Let's go!"]),1400);
+      return;
+    }
+    // Any other input during intro — treat as "let's go"
+    chatIntroComplete=true;
+    setTimeout(()=>askStep(0),800);
+    return;
   }
-  if(chatStep>0&&chatStep<=CHAT_STEPS.length){CHAT_STEPS[chatStep-1].update(val);}
-  chatStep++;
-  if(chatStep<=CHAT_STEPS.length){setTimeout(()=>askStep(chatStep-1),700);}
+  // Save answer for current step
+  if(chatStep>=0&&chatStep<CHAT_STEPS.length){
+    CHAT_STEPS[chatStep].update(val);
+    chatStep++;
+  }
+  if(chatStep<CHAT_STEPS.length){setTimeout(()=>askStep(chatStep),700);}
   else{finishChat();}
 }
 function askStep(idx){
+  if(idx>=CHAT_STEPS.length){finishChat();return;}
   const step=CHAT_STEPS[idx];
   addMessage('bot',step.question);
   if(step.hint){
@@ -926,7 +943,9 @@ function askStep(idx){
       hint.textContent=step.hint;qr.appendChild(hint);
       if(step.replies&&step.replies.length)addQuickReplies(step.replies,step.multi||false);
     },700);
-  } else if(step.replies&&step.replies.length){setTimeout(()=>addQuickReplies(step.replies,step.multi||false),700);}
+  } else if(step.replies&&step.replies.length){
+    setTimeout(()=>addQuickReplies(step.replies,step.multi||false),700);
+  }
 }
 function updateChatPanel(id,val){const el=document.getElementById(id);if(el){el.textContent=val;el.className='tracker-val filled';}}
 function finishChat(){
@@ -950,7 +969,7 @@ async function chatGenerate(){
   } catch(e){showAlert('chat-error','Generate failed: '+e.message);}
   finally{btn.disabled=false;btn.textContent='Generate Policy';}
 }
-function resetChat(){chatStarted=false;chatStep=0;chatData={};cPolicyDataChat=null;startChat();['cp-name','cp-number','cp-owner','cp-approver','cp-date','cp-purpose','cp-frameworks'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='—';el.className='tracker-val';}});}
+function resetChat(){chatStarted=false;chatStep=0;chatIntroComplete=false;chatData={};cPolicyDataChat=null;startChat();['cp-name','cp-number','cp-owner','cp-approver','cp-date','cp-purpose','cp-frameworks'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='—';el.className='tracker-val';}});}
 
 // ── Utility ────────────────────────────────────────────────────────────
 function showAlert(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display='block';}}
