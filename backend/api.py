@@ -1,11 +1,12 @@
 """
-api.py — Midnight FastAPI backend
+api.py — Midnight FastAPI backend v2.0
 """
 
 import uuid
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 
 from services import (
     get_uploaded_text,
@@ -26,11 +27,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory stores (resets on redeploy — fine for now)
+# In-memory stores (resets on redeploy)
 LOGO_STORE      = {}   # logo_token → file path
-FRAMEWORK_STORE = {}   # policy_id  → framework_map
+FRAMEWORK_STORE = {}   # policy_id  → {policy_data, framework_map}
 
 
+# ── Serve tool UI ─────────────────────────────────────────────────────────────
+@app.get("/")
+def serve_tool():
+    tool_path = Path("tool.html")
+    if tool_path.exists():
+        return FileResponse("tool.html", media_type="text/html")
+    return HTMLResponse("<h2>Midnight API is running. Tool not found.</h2>", status_code=200)
+
+
+# ── Health ────────────────────────────────────────────────────────────────────
 @app.get("/api/health")
 def health():
     return {"status": "ok", "version": "2.0"}
@@ -50,13 +61,13 @@ async def preview(
         if len(source_text.strip()) < 5:
             raise HTTPException(400, "No readable text extracted from document.")
 
-        # Step 1 — extract structured POLICY_DATA
+        # Step 1 — extract
         policy_data = run_llm_transform(source_text, template_name)
 
         # Step 2 — framework mapping
         framework_map = run_framework_mapping(policy_data)
 
-        # Step 3 — store framework map for GRC summary download
+        # Step 3 — store for GRC summary
         policy_id = str(uuid.uuid4())
         FRAMEWORK_STORE[policy_id] = {
             "policy_data":   policy_data,
@@ -112,13 +123,13 @@ async def generate(payload: dict):
 @app.post("/api/migrate/grc-summary")
 async def grc_summary(payload: dict):
     try:
-        policy_id   = payload.get("policy_id")
-        policy_data = payload.get("policy_data")
+        policy_id     = payload.get("policy_id")
+        policy_data   = payload.get("policy_data")
         framework_map = payload.get("framework_map")
 
-        # Try to get from store first, fall back to payload
+        # Try store first, fall back to payload
         if policy_id and policy_id in FRAMEWORK_STORE:
-            stored = FRAMEWORK_STORE[policy_id]
+            stored        = FRAMEWORK_STORE[policy_id]
             policy_data   = stored["policy_data"]
             framework_map = stored["framework_map"]
 
@@ -138,7 +149,7 @@ async def grc_summary(payload: dict):
         raise HTTPException(400, str(e))
 
 
-# ── Create policy endpoint ────────────────────────────────────────────────────
+# ── Create policy ─────────────────────────────────────────────────────────────
 @app.post("/api/create/generate")
 async def create_generate(payload: dict):
     try:
