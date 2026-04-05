@@ -43,9 +43,6 @@ TEMPLATE_REGISTRY = {
     "Generic Policy Template": "_generic",
     "Generic": "_generic",
     "Enterprise Policy Template": "_generic",
-    # Future examples:
-    # "Healthcare Template": _build_healthcare,
-    # "Finance Template": _build_finance,
 }
 
 # ── Runtime config ────────────────────────────────────────────────────────────
@@ -183,6 +180,24 @@ PROCEDURES FORMAT:
 ]
 
 HERE IS THE LEGACY POLICY DOCUMENT:
+"""
+
+JSON_REPAIR_PROMPT = """
+You are repairing malformed JSON from a policy extraction pipeline.
+
+Your job:
+- Convert the input into valid JSON only
+- Preserve content exactly
+- Do NOT summarize
+- Do NOT remove fields
+- Do NOT add explanation
+- Escape inner quotes correctly
+- Fix commas, brackets, and broken strings only
+- Return only one valid JSON object
+- Start with {
+- End with }
+
+BROKEN JSON:
 """
 
 FRAMEWORK_MAPPING_PROMPT = """
@@ -346,13 +361,6 @@ def _strip_code_fences(raw: str) -> str:
 
 
 def _extract_json_object(raw: str) -> str:
-    """
-    Robustly extract the first outermost JSON object from a model response.
-    Supports:
-      - plain JSON
-      - fenced JSON
-      - old 'POLICY_DATA = {...}' responses
-    """
     raw = _strip_code_fences(raw)
 
     if raw.startswith("POLICY_DATA ="):
@@ -360,7 +368,6 @@ def _extract_json_object(raw: str) -> str:
     elif raw.startswith("POLICY_DATA="):
         raw = raw.split("=", 1)[1].strip()
 
-    # Normalize smart quotes before parsing
     raw = (raw
            .replace("\u201c", '"').replace("\u201d", '"')
            .replace("\u2018", "'").replace("\u2019", "'"))
@@ -383,6 +390,11 @@ def _json_error_context(raw: str, lineno: int | None, window: int = 6) -> str:
     end = min(len(lines), line_no + window)
 
     return "\n".join(f"{i + 1}: {lines[i]}" for i in range(start, end))
+
+
+def _repair_json_via_llm(raw_json: str) -> str:
+    repaired = _groq_call(JSON_REPAIR_PROMPT, raw_json, max_tokens=8000)
+    return _extract_json_object(repaired)
 
 
 def _normalize_revision_history(value: Any) -> list[dict[str, str]]:
@@ -471,7 +483,6 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError("Parsed POLICY_DATA is not a JSON object.")
 
-    # Core scalar fields
     scalar_fields = [
         "policy_name", "policy_number", "version", "grc_id", "supersedes",
         "effective_date", "last_reviewed", "last_revised", "custodians",
@@ -481,7 +492,6 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
     for key in scalar_fields:
         data[key] = str(data.get(key, "") or "").strip()
 
-    # Nested objects
     app = data.get("applicable_to", {}) if isinstance(data.get("applicable_to"), dict) else {}
     data["applicable_to"] = {
         "hps_inc": _coerce_bool(app.get("hps_inc"), False),
@@ -506,7 +516,6 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
         "specific_lob_checked": _coerce_bool(lob.get("specific_lob_checked"), False),
     }
 
-    # Definitions
     defs = data.get("definitions", {})
     if isinstance(defs, dict):
         data["definitions"] = {
@@ -517,7 +526,6 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
     else:
         data["definitions"] = {}
 
-    # Lists
     for key in ("related_policies", "citations"):
         value = data.get(key, [])
         if isinstance(value, list):
@@ -528,7 +536,6 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
     data["procedures"] = _normalize_procedures(data.get("procedures", []))
     data["revision_history"] = _normalize_revision_history(data.get("revision_history", []))
 
-    # Minimum required fields for usable output
     required = ["policy_name", "policy_number", "version"]
     missing = [k for k in required if not data.get(k)]
     if missing:
@@ -538,18 +545,26 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def _parse_policy_data(raw: str) -> dict[str, Any]:
+    raw_json = _extract_json_object(raw)
+
     try:
-        raw_json = _extract_json_object(raw)
         parsed = json.loads(raw_json)
     except json.JSONDecodeError as e:
-        context = _json_error_context(raw_json if "raw_json" in locals() else raw, e.lineno)
-        raise ValueError(
-            f"JSON parsing failed at line {e.lineno}, column {e.colno}.\n\n"
-            f"Context:\n{context}\n\n"
-            f"Original error: {e}"
-        )
-    except Exception as e:
-        raise ValueError(f"Could not parse POLICY_DATA JSON: {e}")
+        print(f"[WARN] Initial POLICY_DATA JSON parse failed at line {e.lineno}, col {e.colno}")
+        print(_json_error_context(raw_json, e.lineno))
+
+        try:
+            repaired_json = _repair_json_via_llm(raw_json)
+            parsed = json.loads(repaired_json)
+            print("[INFO] POLICY_DATA repaired successfully by secondary JSON repair pass.")
+        except Exception as repair_error:
+            context = _json_error_context(raw_json, e.lineno)
+            raise ValueError(
+                f"JSON parsing failed at line {e.lineno}, column {e.colno}.\n\n"
+                f"Context:\n{context}\n\n"
+                f"Original error: {e}\n\n"
+                f"Repair attempt failed: {repair_error}"
+            )
 
     return _validate_policy_data(parsed)
 
@@ -648,7 +663,6 @@ def _parse_framework_map(raw: str, policy_data: dict[str, Any]) -> dict[str, Any
         print(f"[WARN] Framework JSON parse failed at line {e.lineno}, col {e.colno}\n{context}")
         return _empty_map(policy_data)
 
-    # Normalize
     if not isinstance(framework_map, dict):
         return _empty_map(policy_data)
 
