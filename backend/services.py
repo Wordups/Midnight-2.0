@@ -281,13 +281,12 @@ def _parse_policy_data(raw: str) -> dict:
            .replace("\u201c", '"').replace("\u201d", '"')
            .replace("\u2018", "'").replace("\u2019", "'"))
 
-    # 🔥 ADD THIS — shows you EXACTLY what is breaking
-    print("\n\n===== RAW MODEL OUTPUT START =====\n")
-    print(raw)
-    print("\n===== RAW MODEL OUTPUT END =====\n\n")
-
-    namespace = {}
-    exec(raw, {}, namespace)
+    # 🔥 FORCE OUTPUT INTO ERROR (so you ALWAYS see it)
+    try:
+        namespace = {}
+        exec(raw, {}, namespace)
+    except Exception as e:
+        raise ValueError(f"\n\nRAW OUTPUT:\n{raw}\n\nERROR:\n{e}")
 
     result = namespace.get("POLICY_DATA")
     if not result or not isinstance(result, dict):
