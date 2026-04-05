@@ -2,844 +2,926 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="referrer" content="no-referrer-when-downgrade">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Midnight — Enterprise Policy Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#03080f;
-  --s1:#080f1a;
-  --s2:#0c1524;
-  --s3:#111d30;
-  --b0:rgba(255,255,255,0.06);
-  --b1:rgba(255,255,255,0.10);
-  --b2:rgba(255,255,255,0.18);
+  --bg:#050a12;
+  --s1:#080e18;
+  --s2:#0b1420;
+  --s3:#0f1c2e;
+  --b0:rgba(255,255,255,0.05);
+  --b1:rgba(255,255,255,0.09);
+  --b2:rgba(255,255,255,0.16);
   --t0:#ffffff;
-  --t1:#e2eaf5;
-  --t2:#8a9bb5;
-  --t3:#4c607a;
-  --cyan:#00c3e3;
-  --cyan-bg:rgba(0,195,227,0.08);
-  --cyan-bd:rgba(0,195,227,0.22);
-  --green:#00d68f;
-  --green-bg:rgba(0,214,143,0.08);
-  --green-bd:rgba(0,214,143,0.25);
-  --red-bg:rgba(250,90,40,0.08);
-  --red-bd:rgba(250,90,40,0.25);
-  --nav-h:58px;
+  --t1:#dde8f7;
+  --t2:#7d95b5;
+  --t3:#3d5470;
+  --cyan:#00d4f5;
+  --cyan2:#00a8c8;
+  --cyan-bg:rgba(0,212,245,0.07);
+  --cyan-bd:rgba(0,212,245,0.2);
+  --green:#00e89a;
+  --orange:#ff6b35;
+  --nav-h:60px;
+  --display:'Bebas Neue',display;
+  --body:'Outfit',sans-serif;
+  --mono:'JetBrains Mono',monospace;
 }
 html{scroll-behavior:smooth}
 body{
-  font-family:'Inter',system-ui,sans-serif;
+  font-family:var(--body);
   background:var(--bg);
   color:var(--t1);
   overflow-x:hidden;
 }
 
-/* ── Ticker ─────────────────────────────────────────────────────────────── */
-.ticker{
-  background:var(--cyan);
-  overflow:hidden;height:34px;
-  display:flex;align-items:center;
-}
-.ticker-track{
-  display:flex;align-items:center;
-  white-space:nowrap;
-  animation:tickerScroll 32s linear infinite;
-}
-.ticker-set{display:inline-flex;align-items:center}
-.ticker-set span{
-  font-family:'Space Mono',monospace;
-  font-size:11px;font-weight:500;
-  letter-spacing:0.14em;text-transform:uppercase;
-  color:#000;padding:0 18px;
-}
-.ticker-dot{color:rgba(0,0,0,0.3)!important;padding:0 2px!important;letter-spacing:0!important}
-@keyframes tickerScroll{
-  from{transform:translateX(0)}
-  to{transform:translateX(-50%)}
-}
+/* ── TICKER ─── */
+.ticker{height:36px;background:var(--cyan);overflow:hidden;display:flex;align-items:center}
+.ticker-inner{display:flex;white-space:nowrap;animation:tick 30s linear infinite}
+.ticker-inner span{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:#000;padding:0 20px}
+.ticker-sep{color:rgba(0,0,0,0.3)!important;padding:0!important}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-/* ── Nav ─────────────────────────────────────────────────────────────────── */
+/* ── NAV ─── */
 nav{
-  position:sticky;top:0;z-index:200;
+  position:sticky;top:0;z-index:100;
   height:var(--nav-h);
   display:flex;align-items:center;justify-content:space-between;
   padding:0 3rem;
-  background:rgba(3,8,15,0.92);
-  backdrop-filter:blur(20px);
+  background:rgba(5,10,18,0.9);
+  backdrop-filter:blur(24px);
   border-bottom:1px solid var(--b0);
 }
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;cursor:pointer}
-.nav-logo{
-  width:28px;height:28px;background:var(--cyan);
-  border-radius:6px;display:flex;align-items:center;justify-content:center;
+.nav-brand{display:flex;align-items:center;gap:12px;cursor:pointer;text-decoration:none}
+.nav-icon{
+  width:30px;height:30px;background:var(--cyan);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
 }
-.nav-logo svg{width:14px;height:14px}
-.nav-name{
-  font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;
-  letter-spacing:0.08em;color:var(--t0);text-transform:uppercase;
-}
-.nav-links{display:flex;align-items:center;gap:0.25rem}
+.nav-icon svg{width:14px;height:14px}
+.nav-wordmark{font-family:var(--display);font-size:22px;letter-spacing:0.12em;color:var(--t0)}
+.nav-links{display:flex;gap:2px}
 .nav-link{
-  padding:6px 14px;border-radius:6px;
-  font-size:13px;font-weight:500;color:var(--t2);
-  text-decoration:none;cursor:pointer;
-  transition:all .15s ease;border:none;background:none;
+  font-family:var(--body);font-size:13px;font-weight:500;
+  color:var(--t2);padding:7px 16px;border-radius:6px;
+  cursor:pointer;border:none;background:none;
+  transition:color .15s,background .15s;
 }
-.nav-link:hover{color:var(--t0);background:rgba(255,255,255,0.05)}
-.nav-link.active{color:var(--t0);background:rgba(255,255,255,0.07)}
+.nav-link:hover,.nav-link.active{color:var(--t0);background:var(--b0)}
 .nav-cta{
-  background:var(--cyan);color:#000;border:none;
-  border-radius:6px;padding:8px 18px;
-  font-size:13px;font-weight:700;cursor:pointer;
-  transition:opacity .15s;letter-spacing:0.02em;
+  font-family:var(--body);font-size:13px;font-weight:600;
+  background:var(--cyan);color:#000;
+  border:none;border-radius:7px;padding:8px 20px;
+  cursor:pointer;transition:opacity .15s,transform .15s;
+  letter-spacing:0.02em;
 }
-.nav-cta:hover{opacity:0.85}
+.nav-cta:hover{opacity:0.88;transform:translateY(-1px)}
 
-/* ── Pages ───────────────────────────────────────────────────────────────── */
+/* ── PAGES ─── */
 .page{display:none}
 .page.active{display:block}
 
-/* ── Sections ────────────────────────────────────────────────────────────── */
-.section{padding:90px 4rem;max-width:1280px;margin:0 auto}
-.section-sm{padding:60px 4rem;max-width:1280px;margin:0 auto}
-.divider{height:1px;background:linear-gradient(90deg,transparent,var(--b1),transparent)}
-
+/* ── UTILITIES ─── */
 .eyebrow{
-  font-family:'Space Mono',monospace;font-size:12px;
-  letter-spacing:0.22em;color:var(--cyan);
-  text-transform:uppercase;margin-bottom:14px;
+  font-family:var(--mono);font-size:11px;letter-spacing:0.24em;
+  color:var(--cyan);text-transform:uppercase;margin-bottom:16px;
 }
-.headline{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:clamp(28px,3.5vw,42px);
-  font-weight:700;color:var(--t0);
-  line-height:1.3;margin-bottom:10px;
-  letter-spacing:-0.01em;
-  overflow:visible;
-  padding-bottom:2px;
+.section-title{
+  font-family:var(--display);
+  font-size:clamp(32px,4vw,52px);
+  letter-spacing:0.04em;color:var(--t0);
+  line-height:1.05;margin-bottom:12px;
 }
-.subline{
-  font-size:16px;color:var(--t2);
-  max-width:560px;font-weight:300;
-  margin-bottom:48px;line-height:1.7;
+.section-sub{
+  font-size:16px;color:var(--t2);font-weight:300;
+  line-height:1.75;max-width:560px;margin-bottom:48px;
 }
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--b1),transparent);margin:0}
 
-/* ── Cards ───────────────────────────────────────────────────────────────── */
-.card{
-  background:var(--s1);border:1px solid var(--b0);
-  border-radius:12px;padding:24px;
-}
-.card-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--t0);margin-bottom:8px}
-.card-body{font-size:13px;color:var(--t2);line-height:1.65;font-weight:300}
-
-/* ── Buttons ─────────────────────────────────────────────────────────────── */
 .btn-primary{
-  background:var(--cyan);color:#000;border:none;
-  border-radius:8px;padding:13px 32px;
-  font-size:14px;font-weight:700;cursor:pointer;
-  letter-spacing:0.02em;transition:all .2s;
-  display:inline-block;text-decoration:none;
+  display:inline-block;font-family:var(--body);font-size:14px;font-weight:600;
+  background:var(--cyan);color:#000;border:none;border-radius:8px;
+  padding:13px 32px;cursor:pointer;letter-spacing:0.02em;
+  transition:opacity .2s,transform .2s;text-decoration:none;
 }
-.btn-primary:hover{opacity:0.85;transform:translateY(-1px)}
-.btn-ghost{
+.btn-primary:hover{opacity:0.88;transform:translateY(-1px)}
+.btn-outline{
+  display:inline-block;font-family:var(--body);font-size:14px;font-weight:500;
   background:transparent;color:var(--t1);
   border:1px solid var(--b1);border-radius:8px;
-  padding:13px 32px;font-size:14px;font-weight:500;
-  cursor:pointer;transition:all .2s;
-  display:inline-block;text-decoration:none;
+  padding:13px 32px;cursor:pointer;transition:all .2s;text-decoration:none;
 }
-.btn-ghost:hover{border-color:var(--b2);transform:translateY(-1px)}
+.btn-outline:hover{border-color:var(--b2);transform:translateY(-1px)}
 
-/* ── Form ────────────────────────────────────────────────────────────────── */
-.field{margin-bottom:18px}
+/* ── ANIMATIONS ─── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 30px rgba(0,212,245,0.15)}50%{box-shadow:0 0 60px rgba(0,212,245,0.3)}}
+.animate-in{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+.animate-in.visible{opacity:1;transform:translateY(0)}
+
+/* ── HOME HERO ─── */
+.hero{
+  min-height:calc(100vh - 96px);
+  display:grid;grid-template-columns:1fr 1fr;
+  position:relative;overflow:hidden;
+}
+.hero-left{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:80px 60px 80px 80px;position:relative;z-index:2;
+}
+.hero-eyebrow{
+  opacity:0;animation:fadeUp .7s ease .1s forwards;
+}
+.hero-title{
+  font-family:var(--display);
+  font-size:clamp(80px,10vw,130px);
+  letter-spacing:0.05em;line-height:0.9;
+  color:var(--t0);
+  margin-bottom:6px;
+  opacity:0;animation:fadeUp .8s ease .2s forwards;
+}
+.hero-title .hl{color:var(--cyan)}
+.hero-tagline{
+  font-family:var(--mono);font-size:13px;letter-spacing:0.2em;
+  color:var(--t2);text-transform:uppercase;
+  margin-bottom:24px;
+  opacity:0;animation:fadeUp .8s ease .3s forwards;
+}
+.hero-sub{
+  font-size:17px;color:var(--t2);font-weight:300;
+  max-width:460px;line-height:1.7;margin-bottom:10px;
+  opacity:0;animation:fadeUp .8s ease .35s forwards;
+}
+.hero-sub strong{color:var(--t1);font-weight:500}
+.hero-btns{
+  display:flex;gap:12px;margin-bottom:44px;
+  opacity:0;animation:fadeUp .8s ease .4s forwards;
+}
+.hero-badges{
+  display:flex;flex-wrap:wrap;gap:7px;
+  opacity:0;animation:fadeUp .8s ease .5s forwards;
+}
+.badge{
+  font-family:var(--mono);font-size:10px;letter-spacing:0.12em;
+  color:var(--t3);border:1px solid var(--b0);border-radius:4px;
+  padding:4px 10px;text-transform:uppercase;
+}
+
+/* Hero right — chicken */
+.hero-right{
+  position:relative;background:#050c16;
+  border-left:1px solid var(--b0);
+  overflow:hidden;
+}
+.hero-right img{
+  width:100%;height:100%;
+  object-fit:cover;object-position:center top;
+  opacity:0;animation:fadeIn 1.2s ease .6s forwards;
+}
+.hero-badge-overlay{
+  position:absolute;bottom:28px;left:28px;z-index:3;
+  background:rgba(5,10,18,0.88);
+  border:1px solid var(--cyan-bd);
+  border-radius:10px;padding:14px 20px;
+  backdrop-filter:blur(16px);
+  opacity:0;animation:fadeUp 1s ease 1s forwards;
+}
+.hero-badge-overlay .cluck{
+  font-family:var(--display);font-size:22px;letter-spacing:0.1em;color:var(--cyan);
+}
+.hero-badge-overlay .sub{
+  font-family:var(--mono);font-size:10px;letter-spacing:0.18em;color:var(--t3);margin-top:3px;text-transform:uppercase;
+}
+
+/* ── QUICK NAV STRIP ─── */
+.strip{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--b0);
+  border-bottom:1px solid var(--b0);
+  background:var(--s1);
+}
+.strip-item{
+  padding:22px 28px;border-right:1px solid var(--b0);
+  cursor:pointer;transition:background .2s;
+}
+.strip-item:last-child{border-right:none}
+.strip-item:hover{background:rgba(255,255,255,0.02)}
+.strip-num{font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:0.16em;margin-bottom:5px}
+.strip-title{font-family:var(--body);font-size:14px;font-weight:600;color:var(--t0);margin-bottom:3px}
+.strip-sub{font-size:12px;color:var(--t3)}
+
+/* ── STATS ─── */
+.stats{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border:1px solid var(--b0);border-radius:12px;overflow:hidden;
+  margin:48px auto;max-width:1280px;
+}
+.stat{padding:36px 32px;border-right:1px solid var(--b0);transition:background .2s}
+.stat:last-child{border-right:none}
+.stat:hover{background:rgba(255,255,255,0.015)}
+.stat-num{
+  font-family:var(--display);font-size:58px;letter-spacing:0.04em;
+  color:var(--t0);line-height:1;margin-bottom:10px;
+}
+.stat-num .accent{color:var(--cyan)}
+.stat-label{font-size:13px;color:var(--t3);line-height:1.55;max-width:150px}
+
+/* ── FEATURES ─── */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b0)}
+.feat{
+  background:var(--bg);padding:32px 28px;
+  transition:background .2s;
+}
+.feat:hover{background:var(--s1)}
+.feat-num{font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:0.12em;margin-bottom:12px}
+.feat-title{font-family:var(--body);font-size:17px;font-weight:600;color:var(--t0);margin-bottom:8px}
+.feat-body{font-size:13px;color:var(--t2);line-height:1.7;font-weight:300}
+.feat-accent{border-top:2px solid var(--cyan)}
+
+/* ── VIDEO ─── */
+.video-wrap{
+  width:100%;max-width:860px;margin:0 auto;
+  border-radius:14px;overflow:hidden;
+  border:1px solid var(--b1);
+  aspect-ratio:16/9;position:relative;
+  animation:glowPulse 4s ease infinite;
+}
+.vid-thumb{
+  position:absolute;inset:0;cursor:pointer;
+  background:#050c16;
+  background-image:url('https://img.youtube.com/vi/VfihA9MtqrA/maxresdefault.jpg');
+  background-size:cover;background-position:center;
+}
+.vid-overlay{
+  position:absolute;inset:0;
+  background:rgba(5,10,18,0.45);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+}
+.vid-play{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--cyan);display:flex;align-items:center;justify-content:center;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 0 0 10px rgba(0,212,245,0.12);
+}
+.vid-play:hover{transform:scale(1.1);box-shadow:0 0 0 16px rgba(0,212,245,0.18)}
+.vid-play svg{width:22px;height:22px;margin-left:4px}
+.vid-label{font-family:var(--mono);font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.55);text-transform:uppercase}
+
+/* ── CARD ─── */
+.card{background:var(--s1);border:1px solid var(--b0);border-radius:12px;padding:24px}
+.card-title{font-size:15px;font-weight:600;color:var(--t0);margin-bottom:6px}
+.card-body{font-size:13px;color:var(--t2);line-height:1.65;font-weight:300}
+
+/* ── PIPELINE ─── */
+.pipeline{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:0;position:relative;
+}
+.pipeline::before{
+  content:'';position:absolute;
+  top:36px;left:calc(100%/6);right:calc(100%/6);
+  height:1px;background:linear-gradient(90deg,var(--cyan),rgba(0,212,245,0.3),var(--cyan));
+  z-index:0;
+}
+.pipe-step{text-align:center;padding:0 24px;position:relative;z-index:1}
+.pipe-dot{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--s2);border:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 20px;
+}
+.pipe-dot span{font-family:var(--display);font-size:22px;letter-spacing:0.06em;color:var(--cyan)}
+.pipe-title{font-family:var(--body);font-size:16px;font-weight:600;color:var(--t0);margin-bottom:8px}
+.pipe-body{font-size:13px;color:var(--t2);line-height:1.65}
+
+/* ── ENTERPRISE FORM ─── */
+.ent-grid{display:grid;grid-template-columns:0.45fr 0.55fr;gap:48px;align-items:start}
+.include-list{display:flex;flex-direction:column;gap:14px}
+.include-item{display:flex;gap:14px;align-items:flex-start}
+.include-check{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;margin-top:1px;
+  background:var(--cyan-bg);border:1px solid var(--cyan-bd);
+  display:flex;align-items:center;justify-content:center;
+}
+.include-check svg{width:10px;height:10px}
+.include-title{font-size:13px;font-weight:600;color:var(--t0);margin-bottom:2px}
+.include-sub{font-size:12px;color:var(--t3);line-height:1.5}
+
+/* Form */
+.form-card{background:var(--s1);border:1px solid var(--cyan-bd);border-radius:14px;padding:32px}
+.form-heading{font-family:var(--body);font-size:18px;font-weight:700;color:var(--t0);margin-bottom:4px}
+.form-sub{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--t3);margin-bottom:28px;text-transform:uppercase}
+.field{margin-bottom:16px}
 .field-label{
-  font-size:11px;letter-spacing:0.14em;
+  font-family:var(--mono);font-size:10px;letter-spacing:0.14em;
   color:var(--t3);text-transform:uppercase;
-  font-family:'Space Mono',monospace;
-  margin-bottom:7px;display:block;
+  display:block;margin-bottom:7px;
 }
-.text-input{
+.field input,.field select,.field textarea{
   width:100%;padding:11px 14px;
   background:var(--s2);border:1px solid var(--b0);
   border-radius:8px;color:var(--t1);
-  font-size:13px;font-family:'Inter',sans-serif;
-  transition:border-color .2s;
+  font-size:13px;font-family:var(--body);
+  transition:border-color .2s,background .2s;
 }
-.text-input:focus{outline:none;border-color:var(--cyan);background:var(--s3)}
-.text-input::placeholder{color:var(--t3)}
-.text-area{
-  width:100%;padding:11px 14px;
-  background:var(--s2);border:1px solid var(--b0);
-  border-radius:8px;color:var(--t1);
-  font-size:13px;font-family:'Inter',sans-serif;
-  transition:border-color .2s;resize:vertical;min-height:100px;
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--cyan);background:var(--s3);
 }
-.text-area:focus{outline:none;border-color:var(--cyan);background:var(--s3)}
-.text-area::placeholder{color:var(--t3)}
-select.text-input{cursor:pointer}
-
+.field input::placeholder,.field textarea::placeholder{color:var(--t3)}
+.field textarea{resize:vertical;min-height:80px}
+.field select{cursor:pointer}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .submit-btn{
   width:100%;padding:13px;background:var(--cyan);
   color:#000;border:none;border-radius:8px;
-  font-size:14px;font-weight:700;cursor:pointer;
-  transition:all .2s;letter-spacing:0.02em;
+  font-family:var(--body);font-size:14px;font-weight:700;
+  cursor:pointer;transition:opacity .2s,transform .2s;letter-spacing:0.02em;
 }
-.submit-btn:hover{opacity:0.87;transform:translateY(-1px)}
+.submit-btn:hover{opacity:0.88;transform:translateY(-1px)}
 .submit-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.alert{border-radius:8px;padding:12px 14px;font-size:13px;display:none;margin-bottom:14px;line-height:1.5}
+.alert-success{background:rgba(0,232,154,0.08);border:1px solid rgba(0,232,154,0.25);color:#4df0b8}
+.alert-error{background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.25);color:#ff9a7a}
 
-.alert{
-  border-radius:8px;padding:12px 14px;
-  font-size:13px;margin-bottom:14px;
-  display:none;line-height:1.5;
+/* ── METHODOLOGY ─── */
+.phase-grid{display:flex;flex-direction:column;gap:0}
+.phase{
+  display:grid;grid-template-columns:80px 1fr;
+  border-bottom:1px solid var(--b0);
+  padding:28px 0;
+  transition:background .2s;
 }
-.alert-success{background:var(--green-bg);border:1px solid var(--green-bd);color:#4df0b8}
-.alert-error{background:var(--red-bg);border:1px solid var(--red-bd);color:#ff8a6a}
+.phase:last-child{border-bottom:none}
+.phase-num{
+  font-family:var(--display);font-size:42px;letter-spacing:0.06em;
+  color:var(--b1);padding-top:4px;
+  transition:color .2s;
+}
+.phase:hover .phase-num{color:var(--cyan)}
+.phase-content{}
+.phase-title{font-size:16px;font-weight:600;color:var(--t0);margin-bottom:6px}
+.phase-body{font-size:13px;color:var(--t2);line-height:1.65;font-weight:300}
 
-/* ── Animate ─────────────────────────────────────────────────────────────── */
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(20px)}
-  to{opacity:1;transform:translateY(0)}
+/* ── FOOTER ─── */
+footer{
+  border-top:1px solid var(--b0);
+  padding:28px 3rem;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--s1);
 }
-.animate-in{
-  opacity:0;transform:translateY(18px);
-  transition:opacity .7s ease,transform .7s ease;
-}
-.animate-in.visible{opacity:1;transform:translateY(0)}
+.footer-brand{font-family:var(--display);font-size:14px;letter-spacing:0.12em;color:var(--t3)}
+.footer-links{display:flex;gap:1.5rem}
+.footer-link{font-size:12px;color:var(--t3);background:none;border:none;cursor:pointer;transition:color .2s;font-family:var(--body)}
+.footer-link:hover{color:var(--t1)}
+.footer-copy{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:0.08em}
 
-/* ── Responsive ──────────────────────────────────────────────────────────── */
-@media(max-width:860px){
+/* ── SECTION WRAPPER ─── */
+.section{padding:80px 4rem;max-width:1280px;margin:0 auto}
+.section-wide{padding:80px 4rem}
+.section-wide-inner{max-width:1280px;margin:0 auto}
+
+/* ── RESPONSIVE ─── */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr!important}
+  .hero-right{min-height:400px}
+  .ent-grid{grid-template-columns:1fr!important}
+  .pipeline{grid-template-columns:1fr!important}
+  .feat-grid{grid-template-columns:1fr!important}
+  .strip{grid-template-columns:repeat(2,1fr)!important}
+  .stats{grid-template-columns:repeat(2,1fr)!important}
+  .section,.section-wide{padding:60px 1.5rem!important}
   nav{padding:0 1.25rem}
   .nav-links{display:none}
-  .section,.section-sm{padding:60px 1.5rem}
-  .hero-split{grid-template-columns:1fr!important}
+  .form-row{grid-template-columns:1fr!important}
 }
 </style>
 </head>
 <body>
 
-<!-- Ticker -->
+<!-- TICKER -->
 <div class="ticker">
-  <div class="ticker-track">
-    <div class="ticker-set">
-      <span>Policy Migration</span><span class="ticker-dot">·</span>
-      <span>Policy Creation</span><span class="ticker-dot">·</span>
-      <span>HIPAA</span><span class="ticker-dot">·</span>
-      <span>HiTrust v11</span><span class="ticker-dot">·</span>
-      <span>PCI DSS v4.0</span><span class="ticker-dot">·</span>
-      <span>ISO 27001:2022</span><span class="ticker-dot">·</span>
-      <span>NIST CSF v2.0</span><span class="ticker-dot">·</span>
-      <span>CoBIT 2019</span><span class="ticker-dot">·</span>
-      <span>SOC 2 Type II</span><span class="ticker-dot">·</span>
-      <span>Gap Analysis</span><span class="ticker-dot">·</span>
-      <span>GRC Summary</span><span class="ticker-dot">·</span>
-      <span>Audit Ready</span><span class="ticker-dot">·</span>
-    </div>
-    <div class="ticker-set" aria-hidden="true">
-      <span>Policy Migration</span><span class="ticker-dot">·</span>
-      <span>Policy Creation</span><span class="ticker-dot">·</span>
-      <span>HIPAA</span><span class="ticker-dot">·</span>
-      <span>HiTrust v11</span><span class="ticker-dot">·</span>
-      <span>PCI DSS v4.0</span><span class="ticker-dot">·</span>
-      <span>ISO 27001:2022</span><span class="ticker-dot">·</span>
-      <span>NIST CSF v2.0</span><span class="ticker-dot">·</span>
-      <span>CoBIT 2019</span><span class="ticker-dot">·</span>
-      <span>SOC 2 Type II</span><span class="ticker-dot">·</span>
-      <span>Gap Analysis</span><span class="ticker-dot">·</span>
-      <span>GRC Summary</span><span class="ticker-dot">·</span>
-      <span>Audit Ready</span><span class="ticker-dot">·</span>
-    </div>
+  <div class="ticker-inner">
+    <span>Policy Migration</span><span class="ticker-sep">·</span>
+    <span>Policy Creation</span><span class="ticker-sep">·</span>
+    <span>HIPAA</span><span class="ticker-sep">·</span>
+    <span>HiTrust v11</span><span class="ticker-sep">·</span>
+    <span>PCI DSS v4.0</span><span class="ticker-sep">·</span>
+    <span>ISO 27001:2022</span><span class="ticker-sep">·</span>
+    <span>NIST CSF v2.0</span><span class="ticker-sep">·</span>
+    <span>CoBIT 2019</span><span class="ticker-sep">·</span>
+    <span>SOC 2 Type II</span><span class="ticker-sep">·</span>
+    <span>Gap Analysis</span><span class="ticker-sep">·</span>
+    <span>GRC Summary</span><span class="ticker-sep">·</span>
+    <span>Audit Ready</span><span class="ticker-sep">·</span>
+    <span>Policy Migration</span><span class="ticker-sep">·</span>
+    <span>Policy Creation</span><span class="ticker-sep">·</span>
+    <span>HIPAA</span><span class="ticker-sep">·</span>
+    <span>HiTrust v11</span><span class="ticker-sep">·</span>
+    <span>PCI DSS v4.0</span><span class="ticker-sep">·</span>
+    <span>ISO 27001:2022</span><span class="ticker-sep">·</span>
+    <span>NIST CSF v2.0</span><span class="ticker-sep">·</span>
+    <span>CoBIT 2019</span><span class="ticker-sep">·</span>
+    <span>SOC 2 Type II</span><span class="ticker-sep">·</span>
+    <span>Gap Analysis</span><span class="ticker-sep">·</span>
+    <span>GRC Summary</span><span class="ticker-sep">·</span>
+    <span>Audit Ready</span><span class="ticker-sep">·</span>
   </div>
 </div>
 
-<!-- Nav -->
+<!-- NAV -->
 <nav>
-  <div class="nav-brand" onclick="goTo('home')">
-    <div class="nav-logo">
+  <a class="nav-brand" onclick="goTo('home')">
+    <div class="nav-icon">
       <svg viewBox="0 0 14 14" fill="none">
-        <path d="M7 1L13 7L7 13M1 7h12" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M2 7h10M7 2l5 5-5 5" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <span class="nav-name">Midnight</span>
-  </div>
+    <span class="nav-wordmark">MIDNIGHT</span>
+  </a>
   <div class="nav-links">
-    <button class="nav-link active" id="nav-home"       onclick="goTo('home')">Home</button>
-    <button class="nav-link"        id="nav-platform"   onclick="goTo('platform')">Platform</button>
+    <button class="nav-link active" id="nav-home"        onclick="goTo('home')">Home</button>
+    <button class="nav-link"        id="nav-platform"    onclick="goTo('platform')">Platform</button>
     <button class="nav-link"        id="nav-methodology" onclick="goTo('methodology')">Methodology</button>
-    <button class="nav-link"        id="nav-enterprise" onclick="goTo('enterprise')">Enterprise</button>
+    <button class="nav-link"        id="nav-enterprise"  onclick="goTo('enterprise')">Enterprise</button>
   </div>
   <button class="nav-cta" onclick="goTo('enterprise')">Request Access →</button>
 </nav>
 
 
-<!-- ══════════════════════════════════════════════════════
+<!-- ══════════════════════════════
      HOME
-══════════════════════════════════════════════════════ -->
+══════════════════════════════ -->
 <div class="page active" id="page-home">
 
-  <!-- Hero -->
-  <section style="min-height:calc(100vh - 92px);display:grid;grid-template-columns:1fr 1fr;gap:0;align-items:stretch" class="hero-split">
-
+  <section class="hero">
     <!-- Left -->
-    <div style="display:flex;flex-direction:column;justify-content:center;padding:80px 60px 80px 80px;position:relative">
-      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.26em;color:var(--cyan);text-transform:uppercase;margin-bottom:24px;opacity:0;animation:fadeUp .8s ease .1s forwards">Enterprise Policy Intelligence · by Takeoff</div>
-
-      <h1 style="font-family:'Space Grotesk',sans-serif;font-size:clamp(72px,7vw,108px);font-weight:800;letter-spacing:0.02em;color:#fff;line-height:0.92;text-transform:uppercase;margin-bottom:28px;opacity:0;animation:fadeUp .9s ease .2s forwards">Mid<br><span style="color:var(--cyan)">night</span></h1>
-
-      <p style="font-size:19px;color:var(--t1);max-width:440px;line-height:1.6;font-weight:400;margin-bottom:8px;opacity:0;animation:fadeUp .9s ease .3s forwards">Policies faster. Audits easier. You happier.</p><p style="font-size:15px;color:var(--t2);max-width:440px;line-height:1.7;font-weight:300;margin-bottom:36px;opacity:0;animation:fadeUp .9s ease .35s forwards">Create compliance-ready policies mapped to 7 frameworks. Migrate legacy documents. Get a GRC summary. All in minutes.</p>
-
-      <div style="display:flex;gap:12px;margin-bottom:48px;opacity:0;animation:fadeUp .9s ease .4s forwards">
+    <div class="hero-left">
+      <div class="eyebrow hero-eyebrow">Enterprise Policy Intelligence · Takeoff</div>
+      <h1 class="hero-title">MID<br><span class="hl">NIGHT</span></h1>
+      <div class="hero-tagline">Policy Intelligence Engine</div>
+      <p class="hero-sub"><strong>Policies faster. Audits easier. You happier.</strong><br>Create compliance-ready policies mapped to 7 frameworks. Migrate legacy documents. Get a GRC summary. All in minutes.</p>
+      <div class="hero-btns">
         <button class="btn-primary" onclick="goTo('enterprise')">Request Enterprise Access →</button>
-        <button class="btn-ghost"   onclick="goTo('platform')">See the Platform</button>
+        <button class="btn-outline" onclick="goTo('platform')">See the Platform</button>
       </div>
-
-      <!-- Framework badges -->
-      <div style="display:flex;flex-wrap:wrap;gap:8px;opacity:0;animation:fadeUp .9s ease .5s forwards">
-        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--t3);border:1px solid var(--s2);border-radius:4px;padding:4px 10px">HIPAA</span>
-        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--t3);border:1px solid var(--s2);border-radius:4px;padding:4px 10px">HiTrust</span>
-        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--t3);border:1px solid var(--s2);border-radius:4px;padding:4px 10px">PCI DSS</span>
-        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--t3);border:1px solid var(--s2);border-radius:4px;padding:4px 10px">ISO 27001</span>
-        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--t3);border:1px solid var(--s2);border-radius:4px;padding:4px 10px">NIST CSF</span>
-        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--t3);border:1px solid var(--s2);border-radius:4px;padding:4px 10px">CoBIT</span>
-        <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;color:var(--t3);border:1px solid var(--s2);border-radius:4px;padding:4px 10px">SOC 2</span>
+      <div class="hero-badges">
+        <span class="badge">HIPAA</span><span class="badge">HiTrust</span>
+        <span class="badge">PCI DSS</span><span class="badge">ISO 27001</span>
+        <span class="badge">NIST CSF</span><span class="badge">CoBIT</span>
+        <span class="badge">SOC 2</span>
       </div>
     </div>
 
-    <!-- Right: Midnight Chicken -->
-    <div style="position:relative;background:#060e1c;border-left:1px solid var(--b0);overflow:hidden;display:flex;align-items:center;justify-content:center;padding:0">
-      <!-- Ambient glow -->
-      <div style="position:absolute;top:10%;left:10%;width:400px;height:400px;background:radial-gradient(circle,rgba(0,195,227,0.06),transparent 65%);pointer-events:none;z-index:0"></div>
-      <!-- Chicken image fills the right column -->
-      <img src="chicken.png"
-           alt="Midnight — Chief Compliance Officer"
-           style="width:100%;height:100%;object-fit:cover;object-position:center top;opacity:0;animation:fadeUp 1s ease .5s forwards;position:relative;z-index:1;min-height:600px">
-      <!-- Cluck. Compliant. overlay badge -->
-      <div style="position:absolute;bottom:32px;left:32px;z-index:2;opacity:0;animation:fadeUp 1s ease .9s forwards">
-        <div style="background:rgba(3,8,15,0.85);border:1px solid var(--cyan-bd);border-radius:10px;padding:14px 20px;backdrop-filter:blur(12px)">
-          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--cyan);letter-spacing:0.08em">CLUCK. COMPLIANT.</div>
-          <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:0.16em;margin-top:4px;text-transform:uppercase">Chief Compliance Officer</div>
-        </div>
+    <!-- Right — Chicken -->
+    <div class="hero-right">
+      <img src="chicken.png" alt="Midnight — Chief Compliance Officer">
+      <div class="hero-badge-overlay">
+        <div class="cluck">CLUCK. COMPLIANT.</div>
+        <div class="sub">Chief Compliance Officer</div>
       </div>
     </div>
   </section>
 
   <!-- Quick nav strip -->
-  <div style="border-top:1px solid var(--b0);border-bottom:1px solid var(--b0);background:#060e1c">
-    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)">
-      <div onclick="goTo('platform')" style="padding:22px 28px;border-right:1px solid var(--b0);cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:4px">01</div>
-        <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:3px">Policy Migration</div>
-        <div style="font-size:12px;color:var(--t3)">Legacy docs → compliant output</div>
+  <div class="strip">
+    <div class="strip-item" onclick="goTo('platform')">
+      <div class="strip-num">01</div>
+      <div class="strip-title">Policy Migration</div>
+      <div class="strip-sub">Legacy docs → compliant output</div>
+    </div>
+    <div class="strip-item" onclick="goTo('platform')">
+      <div class="strip-num">02</div>
+      <div class="strip-title">Policy Creation</div>
+      <div class="strip-sub">Intake → framework-mapped doc</div>
+    </div>
+    <div class="strip-item" onclick="goTo('platform')">
+      <div class="strip-num">03</div>
+      <div class="strip-title">GRC Summary</div>
+      <div class="strip-sub">Gap analysis + control mapping</div>
+    </div>
+    <div class="strip-item" onclick="goTo('platform')">
+      <div class="strip-num">04</div>
+      <div class="strip-title">Bird Talk</div>
+      <div class="strip-sub">AI policy assistant 🐔</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div style="padding:0 4rem;background:var(--s1);border-bottom:1px solid var(--b0)">
+    <div class="stats animate-in">
+      <div class="stat">
+        <div class="stat-num"><span class="count-up" data-target="100" data-suffix="+" style="font-family:var(--display)">0+</span></div>
+        <div class="stat-label">Policies migrated across compliance backlogs</div>
       </div>
-      <div onclick="goTo('platform')" style="padding:22px 28px;border-right:1px solid var(--b0);cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:4px">02</div>
-        <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:3px">Policy Creation</div>
-        <div style="font-size:12px;color:var(--t3)">Intake → framework-mapped doc</div>
+      <div class="stat">
+        <div class="stat-num"><span class="count-up" data-target="80" data-suffix="h" style="font-family:var(--display)">0h</span></div>
+        <div class="stat-label">Hours of manual effort eliminated per migration cycle</div>
       </div>
-      <div onclick="goTo('platform')" style="padding:22px 28px;border-right:1px solid var(--b0);cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:4px">03</div>
-        <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:3px">GRC Summary</div>
-        <div style="font-size:12px;color:var(--t3)">Gap analysis + control mapping</div>
+      <div class="stat">
+        <div class="stat-num"><span class="count-up" data-target="7" data-suffix="+" style="font-family:var(--display)">0+</span></div>
+        <div class="stat-label">Compliance frameworks scanned and mapped on every run</div>
       </div>
-      <div onclick="goTo('platform')" style="padding:22px 28px;cursor:pointer;transition:background .2s" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:4px">04</div>
-        <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:3px">Whitepaper Engine</div>
-        <div style="font-size:12px;color:var(--t3)">AI-generated compliance briefs</div>
+      <div class="stat">
+        <div class="stat-num"><span class="count-up" data-target="2" data-suffix="x" style="font-family:var(--display)">0x</span></div>
+        <div class="stat-label">Documents generated per run — policy and GRC summary</div>
       </div>
     </div>
   </div>
 
-  <!-- Video section -->
-  <div style="padding:80px 4rem;background:var(--s1);border-top:1px solid var(--b0);border-bottom:1px solid var(--b0);display:flex;flex-direction:column;align-items:center;overflow:visible" class="animate-in">
-    <div style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:0.22em;color:var(--cyan);text-transform:uppercase;margin-bottom:14px;text-align:center">Product Demo</div>
-    <div style="overflow:visible;padding-bottom:10px;margin-bottom:14px;text-align:center">
-      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:clamp(28px,3.5vw,42px);font-weight:700;color:var(--t0);line-height:1.5;letter-spacing:-0.01em;overflow:visible;display:inline-block;padding-bottom:6px">See Midnight in action</h2>
-    </div>
-    <p style="font-size:15px;color:var(--t2);text-align:center;max-width:480px;margin-bottom:40px;font-weight:300;line-height:1.7">Watch how Midnight takes a legacy policy document and produces a framework-mapped, audit-ready output in minutes.</p>
-    <div style="width:100%;max-width:840px;border-radius:14px;overflow:hidden;border:1px solid var(--b1);box-shadow:0 40px 80px rgba(0,0,0,.5);aspect-ratio:16/9;position:relative">
-      <div id="vid-container" onclick="playVideo()" style="position:absolute;inset:0;cursor:pointer;background:#0a1628;background-image:url('https://img.youtube.com/vi/VfihA9MtqrA/maxresdefault.jpg');background-size:cover;background-position:center">
-        <div style="position:absolute;inset:0;background:rgba(3,8,15,0.4);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
-          <div id="play-btn" style="width:68px;height:68px;border-radius:50%;background:var(--cyan);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 8px rgba(0,195,227,0.14);transition:transform .2s">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M8 5.14v14l11-7-11-7z" fill="#000"/></svg>
+  <!-- Video -->
+  <div style="padding:80px 4rem;background:var(--bg);border-bottom:1px solid var(--b0);display:flex;flex-direction:column;align-items:center" class="animate-in">
+    <div class="eyebrow" style="text-align:center">Product Demo</div>
+    <h2 class="section-title" style="text-align:center;margin-bottom:12px">See Midnight in action</h2>
+    <p style="font-size:15px;color:var(--t2);text-align:center;max-width:500px;margin-bottom:40px;font-weight:300;line-height:1.7">Watch how Midnight takes a legacy policy document and produces a framework-mapped, audit-ready output in minutes.</p>
+    <div class="video-wrap">
+      <div class="vid-thumb" id="vid-container" onclick="playVideo()">
+        <div class="vid-overlay">
+          <div class="vid-play" id="play-btn">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M8 5.14v14l11-7-11-7z" fill="#000"/></svg>
           </div>
-          <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.6);text-transform:uppercase">Watch Demo — Midnight v1</div>
+          <div class="vid-label">Watch Demo · Midnight v1</div>
         </div>
       </div>
     </div>
-    <div style="display:flex;justify-content:space-between;width:100%;max-width:840px;margin-top:14px">
-      <span style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.18em;color:var(--t3);text-transform:uppercase">Product Demo · Takeoff</span>
-      <a href="https://youtu.be/VfihA9MtqrA" target="_blank" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);text-decoration:none;letter-spacing:0.14em;text-transform:uppercase;transition:color .2s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--t3)'">Open on YouTube ↗</a>
+    <div style="display:flex;justify-content:space-between;width:100%;max-width:860px;margin-top:12px">
+      <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.18em;color:var(--t3);text-transform:uppercase">Product Demo · Takeoff</span>
+      <a href="https://youtu.be/VfihA9MtqrA" target="_blank" style="font-family:var(--mono);font-size:10px;color:var(--t3);text-decoration:none;letter-spacing:0.14em;text-transform:uppercase;transition:color .2s" onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--t3)'">Open on YouTube ↗</a>
     </div>
   </div>
 
-  <!-- Stats strip -->
-  <div style="background:#060e1c;border-bottom:1px solid var(--b0)">
-    <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--b0);border-radius:12px;overflow:hidden;margin:40px auto;max-width:1280px">
-      <div class="stat-item" style="padding:32px 28px;border-right:1px solid var(--b0)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1;margin-bottom:10px"><span class="count-up" data-target="100" data-suffix="+" style="font-family:'Space Grotesk',sans-serif">0+</span></div>
-        <div style="font-size:13px;color:var(--t3);line-height:1.55;max-width:140px">Policies migrated across compliance backlogs</div>
-      </div>
-      <div class="stat-item" style="padding:32px 28px;border-right:1px solid var(--b0)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1;margin-bottom:10px"><span class="count-up" data-target="80" data-suffix="h" style="font-family:'Space Grotesk',sans-serif">0h</span></div>
-        <div style="font-size:13px;color:var(--t3);line-height:1.55;max-width:160px">Hours of manual effort eliminated per migration cycle</div>
-      </div>
-      <div class="stat-item" style="padding:32px 28px;border-right:1px solid var(--b0)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1;margin-bottom:10px"><span class="count-up" data-target="7" data-suffix="+" style="font-family:'Space Grotesk',sans-serif">0+</span></div>
-        <div style="font-size:13px;color:var(--t3);line-height:1.55;max-width:140px">Compliance frameworks scanned and mapped on every run</div>
-      </div>
-      <div class="stat-item" style="padding:32px 28px">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1;margin-bottom:10px"><span class="count-up" data-target="2" data-suffix="x" style="font-family:'Space Grotesk',sans-serif">0x</span></div>
-        <div style="font-size:13px;color:var(--t3);line-height:1.55;max-width:140px">Documents generated per run — policy and GRC summary</div>
-      </div>
+  <footer>
+    <div class="footer-brand">MIDNIGHT · TAKEOFF</div>
+    <div class="footer-links">
+      <button class="footer-link" onclick="goTo('platform')">Platform</button>
+      <button class="footer-link" onclick="goTo('methodology')">Methodology</button>
+      <button class="footer-link" onclick="goTo('enterprise')">Enterprise</button>
     </div>
-  </div>
-
-  <!-- Footer -->
-  <footer style="border-top:1px solid var(--b0);padding:28px 3rem;display:flex;align-items:center;justify-content:space-between">
-    <div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:var(--t3);letter-spacing:0.1em;text-transform:uppercase">Midnight · Takeoff</div>
-    <div style="display:flex;gap:1.5rem">
-      <button onclick="goTo('platform')"    style="font-size:12px;color:var(--t3);background:none;border:none;cursor:pointer;transition:color .2s" onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t3)'">Platform</button>
-      <button onclick="goTo('methodology')" style="font-size:12px;color:var(--t3);background:none;border:none;cursor:pointer;transition:color .2s" onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t3)'">Methodology</button>
-      <button onclick="goTo('enterprise')"  style="font-size:12px;color:var(--t3);background:none;border:none;cursor:pointer;transition:color .2s" onmouseover="this.style.color='var(--t1)'" onmouseout="this.style.color='var(--t3)'">Enterprise</button>
-    </div>
-    <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--t3);letter-spacing:0.06em">Enterprise Policy Intelligence · v2.0</div>
+    <div class="footer-copy">Enterprise Policy Intelligence · v2.0</div>
   </footer>
+</div>
 
-</div><!-- /home -->
 
-
-<!-- ══════════════════════════════════════════════════════
+<!-- ══════════════════════════════
      PLATFORM
-══════════════════════════════════════════════════════ -->
+══════════════════════════════ -->
 <div class="page" id="page-platform">
   <div class="section animate-in">
     <div class="eyebrow">The Platform</div>
-    <h2 class="headline">Everything compliance teams need.<br>Nothing they don't.</h2>
-    <p class="subline">Midnight is a closed enterprise platform. Every deployment is scoped, branded, and activated through the enterprise onboarding process.</p>
+    <h2 class="section-title">Everything. One pipeline.</h2>
+    <p class="section-sub">Midnight is a closed enterprise platform. Every deployment is scoped, branded, and activated through a structured onboarding process.</p>
   </div>
-
   <div class="divider"></div>
 
-  <!-- Capabilities grid -->
-  <div class="section">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:60px" class="animate-in">
-      <div class="card" style="border-left:2px solid var(--cyan);border-top-color:transparent;border-bottom-color:transparent;border-right-color:transparent;border-radius:0 10px 10px 0;padding-left:20px">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:0.1em;margin-bottom:10px">01</div>
-        <div class="card-title">Policy Migration</div>
-        <div class="card-body">Upload any legacy .docx, .txt, or .md. AI extracts every field, section, bullet, table, and revision entry — rebuilds it into your branded template.</div>
+  <div style="padding:0 0 0 0;background:var(--s1);border-top:1px solid var(--b0);border-bottom:1px solid var(--b0)">
+    <div class="feat-grid animate-in">
+      <div class="feat feat-accent">
+        <div class="feat-num">01</div>
+        <div class="feat-title">Policy Migration</div>
+        <div class="feat-body">Upload any legacy .docx, .txt, or .md. AI extracts every field, section, bullet, table, and revision entry — rebuilds it into your branded enterprise template.</div>
       </div>
-      <div class="card" style="border-left:2px solid var(--cyan);border-top-color:transparent;border-bottom-color:transparent;border-right-color:transparent;border-radius:0 10px 10px 0;padding-left:20px">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:0.1em;margin-bottom:10px">02</div>
-        <div class="card-title">Policy Creation</div>
-        <div class="card-body">Structured intake form or guided AI conversation. Fill in what you know — Midnight handles layout, formatting, and template fidelity.</div>
+      <div class="feat feat-accent">
+        <div class="feat-num">02</div>
+        <div class="feat-title">Policy Creation</div>
+        <div class="feat-body">Structured intake form or guided Bird Talk conversation. Fill in what you know — Midnight handles layout, formatting, and template fidelity.</div>
       </div>
-      <div class="card" style="border-left:2px solid var(--cyan);border-top-color:transparent;border-bottom-color:transparent;border-right-color:transparent;border-radius:0 10px 10px 0;padding-left:20px">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:0.1em;margin-bottom:10px">03</div>
-        <div class="card-title">Framework Mapping</div>
-        <div class="card-body">Every policy automatically mapped to HIPAA, HiTrust, PCI DSS, ISO 27001, NIST CSF, CoBIT, and SOC 2. Gaps flagged with suggested language.</div>
+      <div class="feat feat-accent">
+        <div class="feat-num">03</div>
+        <div class="feat-title">Framework Mapping</div>
+        <div class="feat-body">Every policy automatically mapped to HIPAA, HiTrust, PCI DSS, ISO 27001, NIST CSF, CoBIT, and SOC 2. Gaps flagged with suggested language.</div>
       </div>
-      <div class="card" style="border-left:2px solid rgba(255,255,255,0.08);border-top-color:transparent;border-bottom-color:transparent;border-right-color:transparent;border-radius:0 10px 10px 0;padding-left:20px">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:0.1em;margin-bottom:10px">04</div>
-        <div class="card-title">GRC Summary</div>
-        <div class="card-body">A second document alongside every policy — full control mapping, gap analysis, and suggested language ready to import into your GRC tool.</div>
+      <div class="feat">
+        <div class="feat-num">04</div>
+        <div class="feat-title">GRC Summary</div>
+        <div class="feat-body">A second document alongside every policy — full control mapping, gap analysis, and suggested language ready to import into your GRC tool.</div>
       </div>
-      <div class="card" style="border-left:2px solid rgba(255,255,255,0.08);border-top-color:transparent;border-bottom-color:transparent;border-right-color:transparent;border-radius:0 10px 10px 0;padding-left:20px">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:0.1em;margin-bottom:10px">05</div>
-        <div class="card-title">Whitepaper Engine</div>
-        <div class="card-body">Generate compliance whitepapers, security architecture briefs, and policy framework overviews from structured intake. AI-written, professionally formatted.</div>
+      <div class="feat">
+        <div class="feat-num">05</div>
+        <div class="feat-title">Bird Talk 🐔</div>
+        <div class="feat-body">AI policy assistant that builds policies through conversation. Answer 8 questions — Midnight builds the policy in the background. Cluck. Compliant.</div>
       </div>
-      <div class="card" style="border-left:2px solid rgba(255,255,255,0.08);border-top-color:transparent;border-bottom-color:transparent;border-right-color:transparent;border-radius:0 10px 10px 0;padding-left:20px">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--t3);letter-spacing:0.1em;margin-bottom:10px">06</div>
-        <div class="card-title">Policy Library</div>
-        <div class="card-body">Search across all your policies instantly. An auditor asks a question — Midnight tells you which policy covers it, which control it maps to, and when it was last reviewed.</div>
+      <div class="feat">
+        <div class="feat-num">06</div>
+        <div class="feat-title">Policy Library</div>
+        <div class="feat-body">Search across all your policies instantly. Auditor asks a question — Midnight tells you which policy covers it, which control it maps to, when it was last reviewed.</div>
       </div>
     </div>
+  </div>
 
-    <!-- Pipeline -->
-    <div class="animate-in" style="background:var(--s1);border:1px solid var(--b0);border-radius:14px;padding:40px">
+  <!-- Pipeline -->
+  <div class="section animate-in">
+    <div style="background:var(--s1);border:1px solid var(--b0);border-radius:14px;padding:48px">
       <div class="eyebrow">Architecture</div>
-      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:8px">Three clean layers. No bleed-through.</h3>
-      <p style="font-size:14px;color:var(--t2);margin-bottom:32px;font-weight:300">Extraction, mapping, and rendering are strictly separated. Each layer does one job.</p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative">
-        <div style="position:absolute;top:32px;left:calc(100%/6);right:calc(100%/6);height:1px;background:linear-gradient(90deg,var(--cyan),rgba(0,195,227,0.3),var(--cyan))"></div>
-        <div style="text-align:center;padding:0 20px">
-          <div style="width:64px;height:64px;border-radius:50%;background:var(--s2);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;position:relative;z-index:1">
-            <span style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--cyan)">01</span>
-          </div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:8px">Extraction</div>
-          <div style="font-size:12px;color:var(--t2);line-height:1.6">Reads the source document. Pulls all fields, sections, bullets, tables, and revision history. Outputs POLICY_DATA.</div>
+      <h3 style="font-family:var(--display);font-size:32px;letter-spacing:0.04em;color:var(--t0);margin-bottom:8px">Three clean layers. No bleed-through.</h3>
+      <p style="font-size:14px;color:var(--t2);margin-bottom:40px;font-weight:300">Extraction, mapping, and rendering are strictly separated. Each layer does one job.</p>
+      <div class="pipeline">
+        <div class="pipe-step">
+          <div class="pipe-dot"><span>01</span></div>
+          <div class="pipe-title">Extraction</div>
+          <div class="pipe-body">Reads the source. Pulls all fields, sections, bullets, tables, revision history. Outputs POLICY_DATA.</div>
         </div>
-        <div style="text-align:center;padding:0 20px">
-          <div style="width:64px;height:64px;border-radius:50%;background:var(--s2);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;position:relative;z-index:1">
-            <span style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--cyan)">02</span>
-          </div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:8px">Mapping</div>
-          <div style="font-size:12px;color:var(--t2);line-height:1.6">Normalizes into a fixed schema. Maps to compliance frameworks. Identifies gaps. Generates suggested policy language.</div>
+        <div class="pipe-step">
+          <div class="pipe-dot"><span>02</span></div>
+          <div class="pipe-title">Mapping</div>
+          <div class="pipe-body">Normalizes into schema. Maps to 7 frameworks. Identifies gaps. Generates suggested policy language.</div>
         </div>
-        <div style="text-align:center;padding:0 20px">
-          <div style="width:64px;height:64px;border-radius:50%;background:var(--s2);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;position:relative;z-index:1">
-            <span style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--cyan)">03</span>
-          </div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:8px">Rendering</div>
-          <div style="font-size:12px;color:var(--t2);line-height:1.6">Rebuilds into the client-branded template. Handles layout only. Deterministic output regardless of content length.</div>
+        <div class="pipe-step">
+          <div class="pipe-dot"><span>03</span></div>
+          <div class="pipe-title">Rendering</div>
+          <div class="pipe-body">Rebuilds into client-branded template. Handles layout only. Deterministic output regardless of length.</div>
         </div>
       </div>
     </div>
   </div>
 
-  <footer style="border-top:1px solid var(--b0);padding:28px 3rem;display:flex;align-items:center;justify-content:space-between">
-    <div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:var(--t3);letter-spacing:0.1em;text-transform:uppercase">Midnight · Takeoff</div>
+  <footer>
+    <div class="footer-brand">MIDNIGHT · TAKEOFF</div>
     <button class="btn-primary" onclick="goTo('enterprise')" style="padding:10px 24px;font-size:13px">Request Enterprise Access →</button>
-    <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--t3)">Enterprise Policy Intelligence · v2.0</div>
+    <div class="footer-copy">Enterprise Policy Intelligence · v2.0</div>
   </footer>
-</div><!-- /platform -->
+</div>
 
 
-<!-- ══════════════════════════════════════════════════════
+<!-- ══════════════════════════════
      METHODOLOGY
-══════════════════════════════════════════════════════ -->
+══════════════════════════════ -->
 <div class="page" id="page-methodology">
   <div class="section animate-in">
     <div class="eyebrow">The Methodology</div>
-    <h2 class="headline">Built by someone who ran a SOC.<br>Not a template vendor.</h2>
-    <p class="subline">Midnight's approach to policy operations is grounded in real enterprise security experience — the same methodology that defines how high-performing compliance teams actually work.</p>
+    <h2 class="section-title">Built by someone<br>who ran a SOC.</h2>
+    <p class="section-sub">Midnight's approach to policy operations is grounded in real enterprise security experience — not a template vendor's playbook.</p>
   </div>
-
   <div class="divider"></div>
 
   <div class="section">
-    <div style="display:grid;grid-template-columns:0.55fr 0.45fr;gap:40px;align-items:start" class="animate-in">
+    <div style="display:grid;grid-template-columns:0.55fr 0.45fr;gap:48px;align-items:start" class="animate-in">
       <div>
-        <h3 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:16px">The problem with policy documentation</h3>
-        <p style="font-size:15px;color:var(--t2);line-height:1.75;font-weight:300;margin-bottom:20px">Most organizations manage policy documentation the same way they did in 2005. Documents live in shared drives. Frameworks are mapped manually, if at all. Auditor questions get answered by whoever happens to know which folder contains what. Gaps aren't discovered until an audit reveals them.</p>
-        <p style="font-size:15px;color:var(--t2);line-height:1.75;font-weight:300;margin-bottom:20px">The problem isn't effort. It's architecture. Policy operations needs the same discipline applied to any other operational system — defined inputs, controlled processing, reliable outputs, and a searchable record of everything.</p>
-        <p style="font-size:15px;color:var(--t2);line-height:1.75;font-weight:300">That's what Midnight is. Not a document formatter. A policy operations engine.</p>
+        <h3 style="font-family:var(--display);font-size:28px;letter-spacing:0.04em;color:var(--t0);margin-bottom:16px">The problem with policy documentation</h3>
+        <p style="font-size:15px;color:var(--t2);line-height:1.75;font-weight:300;margin-bottom:18px">Most organizations manage policy documentation the same way they did in 2005. Documents live in shared drives. Frameworks are mapped manually, if at all. Auditor questions get answered by whoever happens to know which folder contains what.</p>
+        <p style="font-size:15px;color:var(--t2);line-height:1.75;font-weight:300;margin-bottom:18px">The problem isn't effort. It's architecture. Policy operations needs the same discipline applied to any operational system — defined inputs, controlled processing, reliable outputs, and a searchable record.</p>
+        <p style="font-size:15px;color:var(--t2);line-height:1.75;font-weight:300;font-style:italic;border-left:2px solid var(--cyan);padding-left:20px;margin-top:28px">"The SOC is not measured by alerts handled — it is measured by time, accuracy, and control."</p>
       </div>
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div class="card" style="border-left:2px solid var(--cyan);border-top-color:transparent;border-bottom-color:transparent;border-right-color:transparent;border-radius:0 10px 10px 0;padding-left:20px">
-          <div class="card-title">No guessing which policy covers what</div>
-          <div class="card-body">Every policy is indexed, framework-mapped, and searchable. Auditor asks a question — you have the answer in seconds.</div>
-        </div>
-        <div class="card" style="border-left:2px solid var(--cyan);border-top-color:transparent;border-bottom-color:transparent;border-right-color:transparent;border-radius:0 10px 10px 0;padding-left:20px">
-          <div class="card-title">No gaps discovered in the audit room</div>
-          <div class="card-body">Framework mapping runs on every document. Gaps surface before the auditor does, with suggested language to close them.</div>
-        </div>
-        <div class="card" style="border-left:2px solid var(--cyan);border-top-color:transparent;border-bottom-color:transparent;border-right-color:transparent;border-radius:0 10px 10px 0;padding-left:20px">
-          <div class="card-title">No manual reconstruction</div>
-          <div class="card-body">Legacy documents go in. Structured, formatted, compliant output comes out. The work that used to take weeks takes minutes.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SOC Playbook callout -->
-    <div class="animate-in" style="margin-top:60px;background:var(--s1);border:1px solid var(--b0);border-radius:14px;padding:40px;display:grid;grid-template-columns:0.6fr 0.4fr;gap:40px;align-items:center">
-      <div>
-        <div class="eyebrow">Operational Methodology</div>
-        <h3 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:12px">The SOC Operational Standard</h3>
-        <p style="font-size:14px;color:var(--t2);line-height:1.7;font-weight:300;margin-bottom:20px">Midnight's policy methodology is informed by the same operational discipline that defines high-performing Security Operations Centers — five-phase incident lifecycle, SLA-driven measurement, continuous improvement feedback loops, and zero tolerance for undocumented deviation.</p>
-        <p style="font-size:14px;color:var(--t2);line-height:1.7;font-weight:300;font-style:italic">"The SOC is not measured by alerts handled — it is measured by time, accuracy, and control."</p>
-      </div>
-      <div style="background:var(--s2);border:1px solid var(--b0);border-radius:10px;padding:24px">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--cyan);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:14px">Five-Phase Model</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--cyan);flex-shrink:0">1</div><span style="font-size:12px;color:var(--t2)">Detection and Validation</span></div>
-          <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--cyan);flex-shrink:0">2</div><span style="font-size:12px;color:var(--t2)">Analysis and Investigation</span></div>
-          <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--cyan);flex-shrink:0">3</div><span style="font-size:12px;color:var(--t2)">Containment</span></div>
-          <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--cyan);flex-shrink:0">4</div><span style="font-size:12px;color:var(--t2)">Eradication and Recovery</span></div>
-          <div style="display:flex;align-items:center;gap:10px"><div style="width:24px;height:24px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--cyan);flex-shrink:0">5</div><span style="font-size:12px;color:var(--t2)">Post-Incident Review</span></div>
+      <div style="background:var(--s1);border:1px solid var(--b0);border-radius:12px;padding:28px">
+        <div class="eyebrow" style="margin-bottom:20px">Five-Phase Model</div>
+        <div class="phase-grid">
+          <div class="phase">
+            <div class="phase-num">01</div>
+            <div class="phase-content">
+              <div class="phase-title">Detection and Validation</div>
+              <div class="phase-body">Alerts generated, validated, false positives closed with documented rationale.</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-num">02</div>
+            <div class="phase-content">
+              <div class="phase-title">Analysis and Investigation</div>
+              <div class="phase-body">Scope and impact determined. Context gathered across assets, accounts, network.</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-num">03</div>
+            <div class="phase-content">
+              <div class="phase-title">Containment</div>
+              <div class="phase-body">Affected systems isolated. Compromised accounts disabled. All actions timestamped.</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-num">04</div>
+            <div class="phase-content">
+              <div class="phase-title">Eradication and Recovery</div>
+              <div class="phase-body">Threat artifacts removed. Systems restored. Persistence mechanisms validated gone.</div>
+            </div>
+          </div>
+          <div class="phase">
+            <div class="phase-num">05</div>
+            <div class="phase-content">
+              <div class="phase-title">Post-Incident Review</div>
+              <div class="phase-body">Full timeline documented. Lessons captured. Tuning recommendations submitted.</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <footer style="border-top:1px solid var(--b0);padding:28px 3rem;display:flex;align-items:center;justify-content:space-between">
-    <div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:var(--t3);letter-spacing:0.1em;text-transform:uppercase">Midnight · Takeoff</div>
+  <footer>
+    <div class="footer-brand">MIDNIGHT · TAKEOFF</div>
     <button class="btn-primary" onclick="goTo('enterprise')" style="padding:10px 24px;font-size:13px">Request Enterprise Access →</button>
-    <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--t3)">Enterprise Policy Intelligence · v2.0</div>
+    <div class="footer-copy">Enterprise Policy Intelligence · v2.0</div>
   </footer>
-</div><!-- /methodology -->
+</div>
 
 
-<!-- ══════════════════════════════════════════════════════
+<!-- ══════════════════════════════
      ENTERPRISE
-══════════════════════════════════════════════════════ -->
+══════════════════════════════ -->
 <div class="page" id="page-enterprise">
-  <div class="section animate-in" style="max-width:960px">
+  <div class="section animate-in" style="max-width:980px">
     <div class="eyebrow">Enterprise Access</div>
-    <h2 class="headline">Every deployment is custom.<br>Every client is a partnership.</h2>
-    <p class="subline">Midnight is not a self-serve product. Each enterprise engagement is scoped, branded, and activated through a structured onboarding process. Submit your request below to start the conversation.</p>
+    <h2 class="section-title">Every deployment<br>is custom.</h2>
+    <p class="section-sub">Midnight is not self-serve. Each enterprise engagement is scoped, branded, and activated through a structured onboarding process.</p>
   </div>
-
   <div class="divider"></div>
 
-  <div class="section" style="max-width:960px">
-    <div style="display:grid;grid-template-columns:0.45fr 0.55fr;gap:40px;align-items:start" class="animate-in">
-
-      <!-- What you get -->
+  <div class="section" style="max-width:980px">
+    <div class="ent-grid animate-in">
       <div>
-        <h3 style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:20px">What enterprise includes</h3>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:20px;height:20px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </div>
-            <div>
-              <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">Custom branded template</div>
-              <div style="font-size:12px;color:var(--t3);line-height:1.5">Your logo, colors, and formatting — built and tested against the document engine.</div>
-            </div>
+        <h3 style="font-family:var(--display);font-size:24px;letter-spacing:0.04em;color:var(--t0);margin-bottom:24px">What enterprise includes</h3>
+        <div class="include-list">
+          <div class="include-item">
+            <div class="include-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00d4f5" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div><div class="include-title">Custom branded template</div><div class="include-sub">Your logo, colors, and formatting — built and tested against the document engine.</div></div>
           </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:20px;height:20px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </div>
-            <div>
-              <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">Private tenant deployment</div>
-              <div style="font-size:12px;color:var(--t3);line-height:1.5">Your instance, your data, scoped to your organization only.</div>
-            </div>
+          <div class="include-item">
+            <div class="include-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00d4f5" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div><div class="include-title">Private tenant deployment</div><div class="include-sub">Your instance, your data, scoped to your organization only.</div></div>
           </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:20px;height:20px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </div>
-            <div>
-              <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">Full platform access</div>
-              <div style="font-size:12px;color:var(--t3);line-height:1.5">Migration, creation, framework mapping, GRC summary, whitepaper engine, and policy library.</div>
-            </div>
+          <div class="include-item">
+            <div class="include-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00d4f5" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div><div class="include-title">Full platform access</div><div class="include-sub">Migration, creation, framework mapping, GRC summary, Bird Talk, and policy library.</div></div>
           </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:20px;height:20px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/></svg>
-            </div>
-            <div>
-              <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">Framework-specific configuration</div>
-              <div style="font-size:12px;color:var(--t3);line-height:1.5">Mapping tuned to your industry — healthcare, finance, legal, technology.</div>
-            </div>
+          <div class="include-item">
+            <div class="include-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00d4f5" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div><div class="include-title">Framework configuration</div><div class="include-sub">Mapping tuned to your industry — healthcare, finance, legal, technology.</div></div>
           </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:20px;height:20px;border-radius:50%;background:var(--cyan-bg);border:1px solid var(--cyan-bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00c3e3" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <div class="include-item">
+            <div class="include-check"><svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#00d4f5" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div><div class="include-title">Onboarding and support</div><div class="include-sub">Direct line to the Midnight team through activation and beyond.</div></div>
+          </div>
+        </div>
+
+        <div style="margin-top:36px;background:var(--s1);border:1px solid var(--b0);border-radius:10px;padding:20px">
+          <div class="eyebrow" style="margin-bottom:12px">Pricing</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;color:var(--t2)">Monthly</span>
+              <span style="font-family:var(--display);font-size:20px;letter-spacing:0.06em;color:var(--t0)">$500<span style="font-size:13px;font-family:var(--body);color:var(--t3)">/mo</span></span>
             </div>
-            <div>
-              <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:2px">Onboarding and support</div>
-              <div style="font-size:12px;color:var(--t3);line-height:1.5">Direct line to the Midnight team through activation and beyond.</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;color:var(--t2)">Annual <span style="font-size:11px;color:var(--cyan)">(save $1,200)</span></span>
+              <span style="font-family:var(--display);font-size:20px;letter-spacing:0.06em;color:var(--t0)">$4,800<span style="font-size:13px;font-family:var(--body);color:var(--t3)">/yr</span></span>
+            </div>
+            <div style="height:1px;background:var(--b0);margin:4px 0"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;color:var(--t2)">Year 2 renewal</span>
+              <span style="font-family:var(--display);font-size:20px;letter-spacing:0.06em;color:var(--t0)">$4,200<span style="font-size:13px;font-family:var(--body);color:var(--t3)">/yr</span></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;color:var(--t2)">Year 3+ (founding rate)</span>
+              <span style="font-family:var(--display);font-size:20px;letter-spacing:0.06em;color:var(--t0)">$3,600<span style="font-size:13px;font-family:var(--body);color:var(--t3)">/yr</span></span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Intake form -->
-      <div class="card" style="border-color:var(--cyan-bd)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">Request Enterprise Access</div>
-        <div style="font-size:12px;color:var(--t3);margin-bottom:24px;font-family:'Space Mono',monospace;letter-spacing:0.06em">We'll respond within 24 hours.</div>
+      <!-- Form -->
+      <div class="form-card">
+        <div class="form-heading">Request Enterprise Access</div>
+        <div class="form-sub">We'll respond within 24 hours</div>
 
         <div class="alert alert-success" id="form-success">Your request has been received. We'll be in touch within 24 hours.</div>
-        <div class="alert alert-error"   id="form-error">Something went wrong. Please email us directly.</div>
+        <div class="alert alert-error"   id="form-error">Something went wrong. Please try again.</div>
 
-        <form id="enterprise-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" onsubmit="handleSubmit(event)">
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div class="field">
-              <label class="field-label">First Name</label>
-              <input class="text-input" type="text" name="first_name" placeholder="Jane" required>
-            </div>
-            <div class="field">
-              <label class="field-label">Last Name</label>
-              <input class="text-input" type="text" name="last_name" placeholder="Smith" required>
-            </div>
+        <form id="ent-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST" onsubmit="handleSubmit(event)">
+          <div class="form-row">
+            <div class="field"><label class="field-label">First Name</label><input type="text" name="first_name" placeholder="Jane" required></div>
+            <div class="field"><label class="field-label">Last Name</label><input type="text" name="last_name" placeholder="Smith" required></div>
           </div>
-
-          <div class="field">
-            <label class="field-label">Work Email</label>
-            <input class="text-input" type="email" name="email" placeholder="jane@company.com" required>
-          </div>
-
-          <div class="field">
-            <label class="field-label">Company</label>
-            <input class="text-input" type="text" name="company" placeholder="Acme Corp" required>
-          </div>
-
+          <div class="field"><label class="field-label">Work Email</label><input type="email" name="email" placeholder="jane@company.com" required></div>
+          <div class="field"><label class="field-label">Company</label><input type="text" name="company" placeholder="Acme Corp" required></div>
           <div class="field">
             <label class="field-label">Industry</label>
-            <select class="text-input" name="industry" required>
+            <select name="industry" required>
               <option value="" disabled selected>Select your industry</option>
-              <option>Healthcare</option>
-              <option>Financial Services</option>
-              <option>Technology / SaaS</option>
-              <option>Legal</option>
-              <option>Insurance</option>
-              <option>Government / Public Sector</option>
-              <option>Manufacturing</option>
+              <option>Healthcare</option><option>Financial Services</option>
+              <option>Technology / SaaS</option><option>Legal</option>
+              <option>Insurance</option><option>Government / Public Sector</option>
               <option>Other</option>
             </select>
           </div>
-
           <div class="field">
             <label class="field-label">Primary Use Case</label>
-            <select class="text-input" name="use_case" required>
+            <select name="use_case" required>
               <option value="" disabled selected>What brings you to Midnight?</option>
-              <option>Policy migration (legacy docs → compliant output)</option>
+              <option>Policy migration (legacy → compliant output)</option>
               <option>Policy creation from scratch</option>
               <option>Framework mapping and gap analysis</option>
               <option>Audit preparation</option>
-              <option>GRC tool integration</option>
               <option>All of the above</option>
             </select>
           </div>
-
           <div class="field">
-            <label class="field-label">How many policies do you need to address?</label>
-            <select class="text-input" name="policy_volume">
-              <option value="" disabled selected>Approximate volume</option>
-              <option>1–10</option>
-              <option>10–50</option>
-              <option>50–100</option>
-              <option>100+</option>
-              <option>Not sure yet</option>
+            <label class="field-label">Policy volume</label>
+            <select name="volume">
+              <option value="" disabled selected>Approximate number of policies</option>
+              <option>1–10</option><option>10–50</option>
+              <option>50–100</option><option>100+</option><option>Not sure yet</option>
             </select>
           </div>
-
-          <div class="field">
-            <label class="field-label">Anything else we should know?</label>
-            <textarea class="text-area" name="notes" placeholder="Tell us about your current setup, timeline, or specific requirements..." style="min-height:80px"></textarea>
-          </div>
-
+          <div class="field"><label class="field-label">Additional notes</label><textarea name="notes" placeholder="Current setup, timeline, or specific requirements..."></textarea></div>
           <button type="submit" class="submit-btn" id="submit-btn">Submit Request →</button>
         </form>
       </div>
     </div>
   </div>
 
-  <footer style="border-top:1px solid var(--b0);padding:28px 3rem;display:flex;align-items:center;justify-content:space-between">
-    <div style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;color:var(--t3);letter-spacing:0.1em;text-transform:uppercase">Midnight · Takeoff</div>
-    <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--t3)">© 2025 Takeoff. All rights reserved.</div>
+  <footer>
+    <div class="footer-brand">MIDNIGHT · TAKEOFF</div>
+    <div class="footer-copy">© 2025 Takeoff LLC. All rights reserved.</div>
   </footer>
-</div><!-- /enterprise -->
+</div>
 
 
 <script>
-// ── Routing ────────────────────────────────────────────────────────────────
+// ── Routing ────────────────────────────────────────────────────────────
 function goTo(page) {
-  const current = document.querySelector('.page.active');
-  const next    = document.getElementById('page-' + page);
-  if(!next || current === next) return;
-
-  current.style.opacity   = '0';
-  current.style.transform = 'translateY(6px)';
-  current.style.transition= 'opacity .2s ease, transform .2s ease';
-
+  const cur  = document.querySelector('.page.active');
+  const next = document.getElementById('page-' + page);
+  if(!next || cur === next) return;
+  cur.style.cssText  = 'opacity:0;transform:translateY(6px);transition:opacity .18s ease,transform .18s ease;display:block';
   setTimeout(() => {
-    current.classList.remove('active');
-    current.style.opacity = current.style.transform = current.style.transition = '';
+    cur.classList.remove('active');
+    cur.style.cssText = '';
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     next.classList.add('active');
-    const navEl = document.getElementById('nav-' + page);
-    if(navEl) navEl.classList.add('active');
-    window.scrollTo({top:0, behavior:'instant'});
+    const nl = document.getElementById('nav-' + page);
+    if(nl) nl.classList.add('active');
+    window.scrollTo({top:0,behavior:'instant'});
     window.location.hash = page;
-    // Trigger counters when landing on home
+    setTimeout(() => next.querySelectorAll('.animate-in').forEach(el => {
+      if(!el.classList.contains('visible')) el.classList.add('visible');
+    }), 80);
     if(page === 'home') setTimeout(triggerCounters, 400);
-    // Trigger animations
-    setTimeout(() => {
-      next.querySelectorAll('.animate-in').forEach(el => {
-        if(!el.classList.contains('visible')) el.classList.add('visible');
-      });
-    }, 100);
-  }, 180);
+  }, 160);
 }
-
-// Hash routing on load
 window.addEventListener('load', () => {
-  const hash  = window.location.hash.replace('#','');
-  const valid = ['home','platform','methodology','enterprise'];
-  if(valid.includes(hash)) goTo(hash);
-  else {
-    setTimeout(triggerCounters, 600);
-    document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
-  }
+  const h = window.location.hash.replace('#','');
+  if(['home','platform','methodology','enterprise'].includes(h)) goTo(h);
+  else { setTimeout(triggerCounters, 600); }
+  document.querySelectorAll('.animate-in').forEach(el => obs.observe(el));
 });
 
-// ── Video ──────────────────────────────────────────────────────────────────
+// ── Video ──────────────────────────────────────────────────────────────
 function playVideo() {
   const c = document.getElementById('vid-container');
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none';
-  iframe.src = 'https://www.youtube.com/embed/VfihA9MtqrA?autoplay=1&rel=0&modestbranding=1&color=white';
-  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-  iframe.allowFullscreen = true;
-  c.innerHTML = ''; c.appendChild(iframe);
+  const f = document.createElement('iframe');
+  f.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:none';
+  f.src='https://www.youtube.com/embed/VfihA9MtqrA?autoplay=1&rel=0&modestbranding=1&color=white';
+  f.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+  f.allowFullscreen=true;
+  c.innerHTML=''; c.appendChild(f);
 }
 
-// ── Counter animation ──────────────────────────────────────────────────────
+// ── Counters ───────────────────────────────────────────────────────────
 function animateCounters(els) {
   els.forEach(el => {
-    const target   = parseInt(el.dataset.target);
-    const suffix   = el.dataset.suffix || '';
-    const duration = 1400;
-    const start    = performance.now();
-    const step = (now) => {
-      const pct    = Math.min((now - start) / duration, 1);
-      const eased  = 1 - Math.pow(1 - pct, 3);
-      const cur    = Math.floor(eased * target);
-      el.textContent = cur + suffix;
-      el.style.color = pct > 0.6 ? '#ffffff' : '#4c607a';
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    const start  = performance.now();
+    const dur    = 1400;
+    const step   = now => {
+      const pct    = Math.min((now - start) / dur, 1);
+      const eased  = 1 - Math.pow(1-pct, 3);
+      el.textContent = Math.floor(eased * target) + suffix;
+      el.style.color = pct > 0.5 ? 'var(--t0)' : 'var(--t3)';
       if(pct < 1) requestAnimationFrame(step);
-      else { el.textContent = target + suffix; el.style.color = '#ffffff'; }
+      else el.textContent = target + suffix;
     };
     requestAnimationFrame(step);
   });
 }
+function triggerCounters() { animateCounters(document.querySelectorAll('.count-up')); }
 
-function triggerCounters() {
-  animateCounters(document.querySelectorAll('.count-up'));
-}
+// ── Scroll observer ────────────────────────────────────────────────────
+const obs = new IntersectionObserver(entries => entries.forEach(e => {
+  if(e.isIntersecting) {
+    e.target.classList.add('visible');
+    const c = e.target.querySelectorAll('.count-up');
+    if(c.length) animateCounters(c);
+  }
+}), {threshold:0.15, rootMargin:'0px 0px -40px 0px'});
 
-// ── Scroll observer ────────────────────────────────────────────────────────
-const observer = new IntersectionObserver(
-  entries => entries.forEach(e => {
-    if(e.isIntersecting) {
-      e.target.classList.add('visible');
-      const counters = e.target.querySelectorAll('.count-up');
-      if(counters.length) animateCounters(counters);
-    }
-  }),
-  {threshold:0.15, rootMargin:'0px 0px -40px 0px'}
-);
-document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
-
-// ── Enterprise form ────────────────────────────────────────────────────────
+// ── Form ───────────────────────────────────────────────────────────────
 async function handleSubmit(e) {
   e.preventDefault();
   const btn  = document.getElementById('submit-btn');
-  const form = document.getElementById('enterprise-form');
-  btn.disabled = true; btn.textContent = 'Sending...';
-
+  const form = document.getElementById('ent-form');
+  btn.disabled=true; btn.textContent='Sending...';
   try {
-    const res = await fetch(form.action, {
-      method: 'POST',
-      body:   new FormData(form),
-      headers:{ 'Accept': 'application/json' }
-    });
-
+    const res = await fetch(form.action,{method:'POST',body:new FormData(form),headers:{Accept:'application/json'}});
     if(res.ok) {
-      document.getElementById('form-success').style.display = 'block';
-      document.getElementById('form-error').style.display   = 'none';
-      form.reset();
-      btn.textContent = 'Request Sent ✓';
-    } else {
-      throw new Error('Form submission failed');
-    }
-  } catch(err) {
-    document.getElementById('form-error').style.display   = 'block';
-    document.getElementById('form-success').style.display = 'none';
-    btn.disabled = false; btn.textContent = 'Submit Request →';
+      document.getElementById('form-success').style.display='block';
+      form.reset(); btn.textContent='Request Sent ✓';
+    } else throw new Error();
+  } catch {
+    document.getElementById('form-error').style.display='block';
+    btn.disabled=false; btn.textContent='Submit Request →';
   }
 }
 </script>
-
 </body>
 </html>
