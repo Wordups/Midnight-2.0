@@ -276,11 +276,19 @@ def _parse_policy_data(raw: str) -> dict:
         raw = raw[raw.index("POLICY_DATA = {"):]
     elif "POLICY_DATA={" in raw:
         raw = raw[raw.index("POLICY_DATA={"):]
+
     raw = (raw
            .replace("\u201c", '"').replace("\u201d", '"')
            .replace("\u2018", "'").replace("\u2019", "'"))
+
+    # 🔥 ADD THIS — shows you EXACTLY what is breaking
+    print("\n\n===== RAW MODEL OUTPUT START =====\n")
+    print(raw)
+    print("\n===== RAW MODEL OUTPUT END =====\n\n")
+
     namespace = {}
     exec(raw, {}, namespace)
+
     result = namespace.get("POLICY_DATA")
     if not result or not isinstance(result, dict):
         raise ValueError("LLM did not return a valid POLICY_DATA dictionary.")
