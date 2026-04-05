@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Midnight — Policy Intelligence Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050a12;--s1:#080e18;--s2:#0b1420;--s3:#0f1c2e;
+  --b0:rgba(255,255,255,0.05);--b1:rgba(255,255,255,0.09);--b2:rgba(255,255,255,0.16);
+  --t0:#ffffff;--t1:#dde8f7;--t2:#7d95b5;--t3:#3d5470;
+  --cyan:#00d4f5;--cyan-bg:rgba(0,212,245,0.07);--cyan-bd:rgba(0,212,245,0.2);
+  --green:#00e89a;--green-bg:rgba(0,232,154,0.08);--green-bd:rgba(0,232,154,0.25);
+  --red-bg:rgba(255,107,53,0.08);--red-bd:rgba(255,107,53,0.25);
+  --display:'Bebas Neue',display;--body:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+  --nav-h:58px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--bg);color:var(--t1);overflow-x:hidden;min-height:100vh}
+
+/* ── PASSWORD GATE ─── */
+#gate{
+  position:fixed;inset:0;z-index:999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+}
+.gate-box{
+  width:100%;max-width:400px;padding:48px;
+  background:var(--s1);border:1px solid var(--cyan-bd);
+  border-radius:16px;text-align:center;
+}
+.gate-logo{
+  width:52px;height:52px;background:var(--cyan);
+  border-radius:12px;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 20px;
+}
+.gate-logo svg{width:22px;height:22px}
+.gate-title{font-family:var(--display);font-size:32px;letter-spacing:0.08em;color:var(--t0);margin-bottom:6px}
+.gate-sub{font-family:var(--mono);font-size:10px;letter-spacing:0.18em;color:var(--t3);text-transform:uppercase;margin-bottom:32px}
+.gate-input{
+  width:100%;padding:13px 16px;
+  background:var(--s2);border:1px solid var(--b0);
+  border-radius:8px;color:var(--t1);
+  font-size:14px;font-family:var(--body);
+  text-align:center;letter-spacing:0.1em;
+  transition:border-color .2s;margin-bottom:12px;
+}
+.gate-input:focus{outline:none;border-color:var(--cyan)}
+.gate-input::placeholder{color:var(--t3);letter-spacing:0}
+.gate-btn{
+  width:100%;padding:13px;background:var(--cyan);
+  color:#000;border:none;border-radius:8px;
+  font-family:var(--body);font-size:14px;font-weight:700;
+  cursor:pointer;transition:opacity .2s;
+}
+.gate-btn:hover{opacity:0.88}
+.gate-error{
+  font-size:12px;color:#ff9a7a;margin-top:10px;
+  display:none;font-family:var(--mono);letter-spacing:0.06em;
+}
+.gate-hint{font-size:11px;color:var(--t3);margin-top:16px;line-height:1.5}
+
+/* ── NAV ─── */
+nav{
+  position:sticky;top:0;z-index:100;height:var(--nav-h);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;
+  background:rgba(5,10,18,0.92);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--b0);
+}
+.nav-brand{display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-icon{width:28px;height:28px;background:var(--cyan);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.nav-icon svg{width:13px;height:13px}
+.nav-wordmark{font-family:var(--display);font-size:20px;letter-spacing:0.12em;color:var(--t0)}
+.nav-badge{font-family:var(--mono);font-size:9px;letter-spacing:0.14em;color:var(--t3);border:1px solid var(--b0);border-radius:4px;padding:3px 8px;text-transform:uppercase}
+.nav-links{display:flex;gap:2px}
+.nav-link{font-family:var(--body);font-size:13px;font-weight:500;color:var(--t2);padding:6px 14px;border-radius:6px;cursor:pointer;border:none;background:none;transition:all .15s}
+.nav-link:hover,.nav-link.active{color:var(--t0);background:var(--b0)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-user{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:0.08em}
+
+/* ── PAGES ─── */
+.page{display:none;min-height:calc(100vh - var(--nav-h))}
+.page.active{display:block}
+
+/* ── LAYOUT ─── */
+.page-wrap{max-width:1160px;margin:0 auto;padding:40px 2rem 80px}
+.page-header{margin-bottom:32px}
+.page-title{font-family:var(--display);font-size:36px;letter-spacing:0.06em;color:var(--t0);margin-bottom:6px}
+.page-sub{font-size:14px;color:var(--t2);font-weight:300}
+
+/* ── PANELS ─── */
+.panel{background:var(--s1);border:1px solid var(--b0);border-radius:12px;padding:22px}
+.panel-title{font-family:var(--mono);font-size:10px;letter-spacing:0.16em;color:var(--t3);text-transform:uppercase;margin-bottom:16px}
+.panel-divider{height:1px;background:var(--b0);margin:16px 0}
+
+/* ── STEPS ─── */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.step{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--t3);letter-spacing:0.06em}
+.step.active{color:var(--cyan)}
+.step.done{color:var(--green)}
+.step-dot{width:24px;height:24px;border-radius:50%;background:var(--s2);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.step.active .step-dot{background:var(--cyan-bg);border-color:var(--cyan);color:var(--cyan)}
+.step.done .step-dot{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.step-line{flex:1;height:1px;background:var(--b0);margin:0 6px;min-width:16px}
+
+/* ── FIELDS ─── */
+.field{margin-bottom:16px}
+.field-label{font-family:var(--mono);font-size:10px;letter-spacing:0.14em;color:var(--t3);text-transform:uppercase;display:block;margin-bottom:6px}
+.field-note{font-size:11px;color:var(--t3);margin-top:4px}
+.text-input{width:100%;padding:10px 13px;background:var(--s2);border:1px solid var(--b0);border-radius:8px;color:var(--t1);font-size:13px;font-family:var(--body);transition:border-color .2s}
+.text-input:focus{outline:none;border-color:var(--cyan);background:var(--s3)}
+.text-input::placeholder{color:var(--t3)}
+.text-area{width:100%;padding:10px 13px;background:var(--s2);border:1px solid var(--b0);border-radius:8px;color:var(--t1);font-size:13px;font-family:var(--body);transition:border-color .2s;resize:vertical;min-height:90px}
+.text-area:focus{outline:none;border-color:var(--cyan);background:var(--s3)}
+.text-area::placeholder{color:var(--t3)}
+select.text-input{cursor:pointer}
+input[type="file"].text-input{cursor:pointer}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-section{font-family:var(--mono);font-size:10px;letter-spacing:0.16em;color:var(--cyan);text-transform:uppercase;margin-bottom:12px;margin-top:20px}
+.form-section:first-child{margin-top:0}
+
+/* ── BUTTONS ─── */
+.action-btn{width:100%;padding:11px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:0.02em;font-family:var(--body);margin-bottom:9px}
+.action-btn:last-child{margin-bottom:0}
+.btn-cyan{background:var(--cyan);color:#000}
+.btn-cyan:hover{opacity:0.87;transform:translateY(-1px)}
+.btn-cyan:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+.btn-dark{background:var(--s2);color:var(--t1);border:1px solid var(--b1)}
+.btn-dark:hover{border-color:var(--b2)}
+.btn-dark:disabled{opacity:0.35;cursor:not-allowed}
+.btn-teal{background:var(--s2);color:var(--cyan);border:1px solid var(--cyan-bd)}
+.btn-teal:hover{background:var(--cyan-bg)}
+.btn-teal:disabled{opacity:0.35;cursor:not-allowed}
+
+/* ── PROGRESS ─── */
+.progress-wrap{display:none;margin-bottom:14px}
+.progress-track{height:2px;background:var(--b0);border-radius:2px;overflow:hidden;margin-bottom:7px}
+.progress-fill{height:100%;width:0%;background:var(--cyan);transition:width .4s ease}
+.progress-label{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:0.06em}
+
+/* ── ALERTS ─── */
+.alert{border-radius:8px;padding:11px 13px;font-size:12px;display:none;margin-bottom:12px;line-height:1.5}
+.alert-success{background:var(--green-bg);border:1px solid var(--green-bd);color:#4df0b8}
+.alert-error{background:var(--red-bg);border:1px solid var(--red-bd);color:#ff9a7a}
+.alert-info{background:var(--cyan-bg);border:1px solid var(--cyan-bd);color:var(--cyan)}
+
+/* ── PREVIEW PANE ─── */
+.preview-pane{background:var(--s2);border:1px solid var(--b0);border-radius:10px;padding:18px;max-height:440px;overflow-y:auto}
+.preview-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;gap:10px;color:var(--t3);font-size:13px;text-align:center}
+.preview-empty-icon{width:42px;height:42px;border:1px solid var(--b0);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.preview-field{margin-bottom:14px}
+.preview-field-label{font-family:var(--mono);font-size:10px;letter-spacing:0.14em;color:var(--t3);text-transform:uppercase;margin-bottom:4px}
+.preview-field-value{font-size:13px;color:var(--t1);line-height:1.6}
+.preview-divider{height:1px;background:var(--b0);margin:12px 0}
+.preview-tag{display:inline-block;background:var(--cyan-bg);border:1px solid var(--cyan-bd);color:var(--cyan);border-radius:4px;padding:2px 8px;font-size:10px;font-family:var(--mono);letter-spacing:0.06em;margin-right:5px;margin-bottom:5px}
+.gap-pill{background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.22);border-radius:6px;padding:10px 12px;margin-bottom:8px}
+
+/* ── BIRD TALK CHAT ─── */
+.chat-wrap{display:flex;flex-direction:column;height:560px}
+.chat-header{display:flex;align-items:center;gap:10px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--b0)}
+.chat-avatar{font-size:26px;line-height:1}
+.chat-name{font-size:14px;font-weight:600;color:var(--t0)}
+.chat-role{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:0.08em}
+.chat-status{margin-left:auto;display:flex;align-items:center;gap:5px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.status-text{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:0.1em;text-transform:uppercase}
+.chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px;margin-bottom:12px}
+.chat-quick-replies{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.qr-btn{background:var(--s2);color:var(--t1);border:1px solid var(--b1);border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all .15s;font-family:var(--body)}
+.qr-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+.qr-btn.selected{background:var(--cyan-bg);border-color:var(--cyan);color:var(--cyan)}
+.chat-input-row{display:flex;gap:8px}
+.chat-input{flex:1;padding:10px 13px;background:var(--s2);border:1px solid var(--b0);border-radius:8px;color:var(--t1);font-size:13px;font-family:var(--body);transition:border-color .2s}
+.chat-input:focus{outline:none;border-color:var(--cyan)}
+.chat-input::placeholder{color:var(--t3)}
+.chat-send{background:var(--cyan);color:#000;border:none;border-radius:8px;padding:0 16px;font-weight:700;cursor:pointer;font-size:13px;font-family:var(--body);transition:opacity .15s}
+.chat-send:hover{opacity:0.88}
+
+/* Mode cards */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.mode-card{background:var(--s1);border:1px solid var(--b0);border-radius:12px;padding:22px;cursor:pointer;transition:all .2s}
+.mode-card:hover{border-color:var(--b1)}
+.mode-card.active{border-color:var(--cyan);border-width:2px}
+.mode-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:0.18em;color:var(--t3);text-transform:uppercase;margin-bottom:8px}
+.mode-card.active .mode-eyebrow{color:var(--cyan)}
+.mode-title{font-size:16px;font-weight:700;color:var(--t0);margin-bottom:5px}
+.mode-body{font-size:12px;color:var(--t2);line-height:1.6}
+
+/* Progress tracker sidebar */
+.tracker{display:flex;flex-direction:column;gap:10px;font-size:12px;line-height:2}
+.tracker-row{display:flex;justify-content:space-between;gap:8px}
+.tracker-key{color:var(--t3)}
+.tracker-val{color:var(--t2);text-align:right;max-width:55%}
+.tracker-val.filled{color:var(--t1)}
+
+/* ── RESPONSIVE ─── */
+@media(max-width:860px){
+  .migrate-grid,.create-grid,.form-row{grid-template-columns:1fr!important}
+  nav{padding:0 1rem}
+  .page-wrap{padding:28px 1rem 60px}
+  .mode-grid{grid-template-columns:1fr!important}
+}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">
+      <svg viewBox="0 0 22 22" fill="none">
+        <path d="M3 11h16M11 3l8 8-8 8" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="gate-title">MIDNIGHT</div>
+    <div class="gate-sub">Enterprise Access Required</div>
+    <input type="password" class="gate-input" id="gate-input" placeholder="Enter access code" onkeydown="if(event.key==='Enter')checkPassword()">
+    <button class="gate-btn" onclick="checkPassword()">Enter →</button>
+    <div class="gate-error" id="gate-error">Incorrect access code. Contact your Midnight administrator.</div>
+    <div class="gate-hint">Access codes are provided during enterprise onboarding.<br>Need access? Visit <span style="color:var(--cyan);cursor:pointer" onclick="window.open('https://wordups.github.io/Midnight-2.0','_blank')">midnight.io</span></div>
+  </div>
+</div>
+
+<!-- NAV (hidden until unlocked) -->
+<nav id="app-nav" style="display:none">
+  <div class="nav-brand" onclick="goTo('migrate')">
+    <div class="nav-icon">
+      <svg viewBox="0 0 14 14" fill="none">
+        <path d="M2 7h10M7 2l5 5-5 5" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="nav-wordmark">MIDNIGHT</span>
+  </div>
+  <div class="nav-links">
+    <button class="nav-link active" id="nav-migrate" onclick="goTo('migrate')">Migrate</button>
+    <button class="nav-link"        id="nav-create"  onclick="goTo('create')">Create</button>
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge">v2.0</span>
+    <span class="nav-user" id="nav-tenant">Enterprise</span>
+  </div>
+</nav>
+
+<!-- APP (hidden until unlocked) -->
+<div id="app" style="display:none">
+
+<!-- ══════════════════════════════
+     MIGRATE
+══════════════════════════════ -->
+<div class="page active" id="page-migrate">
+<div class="page-wrap">
+  <div class="page-header">
+    <h1 class="page-title">Migrate a Policy</h1>
+    <p class="page-sub">Upload a legacy document — Midnight extracts, maps to frameworks, and generates audit-ready output.</p>
+  </div>
+
+  <div class="steps" id="migrate-steps">
+    <div class="step active" id="mstep-1"><div class="step-dot">1</div><span>Upload</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="mstep-2"><div class="step-dot">2</div><span>Transform</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="mstep-3"><div class="step-dot">3</div><span>Preview</span></div>
+    <div class="step-line"></div>
+    <div class="step" id="mstep-4"><div class="step-dot">4</div><span>Generate</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:0.42fr 0.58fr;gap:18px;align-items:start" class="migrate-grid">
+
+    <!-- Controls -->
+    <div>
+      <div class="panel">
+        <div class="panel-title">Document</div>
+        <div class="field">
+          <label class="field-label">Legacy Policy File</label>
+          <input type="file" id="m-file" accept=".docx,.txt,.md" class="text-input">
+          <div class="field-note">Supported: .docx, .txt, .md</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Logo (optional)</label>
+          <input type="file" id="m-logo" accept=".png,.jpg,.jpeg,.webp" class="text-input">
+          <div class="field-note">PNG recommended. Added to document header.</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Template</label>
+          <select id="m-template" class="text-input">
+            <option>Generic Policy Template</option>
+            <option>Enterprise Template A</option>
+          </select>
+        </div>
+        <div class="progress-wrap" id="m-progress">
+          <div class="progress-track"><div class="progress-fill" id="m-progress-fill"></div></div>
+          <div class="progress-label" id="m-progress-label">Processing...</div>
+        </div>
+        <div class="alert alert-error"   id="m-error"></div>
+        <div class="alert alert-success" id="m-success"></div>
+        <button class="action-btn btn-cyan"  id="m-btn-transform" onclick="migratePreview()">Transform Policy</button>
+        <button class="action-btn btn-dark"  id="m-btn-generate"  onclick="migrateGenerate()" disabled>Generate Document</button>
+        <button class="action-btn btn-teal"  id="m-btn-grc"       onclick="downloadGRC()" disabled>Download GRC Summary</button>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-title">Pipeline</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--t2);line-height:2.1">
+          <span style="color:var(--cyan)">01</span> Extraction → POLICY_DATA<br>
+          <span style="color:var(--cyan)">02</span> Framework Mapping → citations + gaps<br>
+          <span style="color:var(--cyan)">03</span> Rendering → policy.docx + grc_summary.docx
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="panel">
+      <div class="panel-title">Preview</div>
+      <div class="preview-pane">
+        <div class="preview-empty" id="m-preview-empty">
+          <div class="preview-empty-icon">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M6 7h8M6 10h8M6 13h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </div>
+          <div>Upload a document and click<br>Transform Policy to see preview.</div>
+        </div>
+        <div id="m-preview-content" style="display:none"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div><!-- /migrate -->
+
+
+<!-- ══════════════════════════════
+     CREATE
+══════════════════════════════ -->
+<div class="page" id="page-create">
+<div class="page-wrap">
+  <div class="page-header">
+    <h1 class="page-title">Create a Policy</h1>
+    <p class="page-sub">Two paths. Same output.</p>
+  </div>
+
+  <!-- Mode selector -->
+  <div class="mode-grid">
+    <div class="mode-card active" id="mode-form-card" onclick="switchMode('form')">
+      <div class="mode-eyebrow">Option 01</div>
+      <div class="mode-title">Intake Form</div>
+      <div class="mode-body">Fill in the structured form. Full control over every field — name, dates, procedures, citations.</div>
+    </div>
+    <div class="mode-card" id="mode-chat-card" onclick="switchMode('chat')">
+      <div class="mode-eyebrow">Option 02</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <span style="font-size:24px">🐔</span>
+        <div class="mode-title" style="margin-bottom:0">Bird Talk</div>
+      </div>
+      <div class="mode-body">Chat with Midnight the chicken. Answer questions one at a time — Bird Talk builds your policy in the background.</div>
+    </div>
+  </div>
+
+  <!-- FORM MODE -->
+  <div id="create-form-mode">
+  <div style="display:grid;grid-template-columns:0.42fr 0.58fr;gap:18px;align-items:start" class="create-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Settings</div>
+        <div class="field">
+          <label class="field-label">Template</label>
+          <select id="c-template" class="text-input" onchange="updateDefaults()">
+            <option>Generic Policy Template</option>
+            <option>Enterprise Template A</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Logo (optional)</label>
+          <input type="file" id="c-logo" accept=".png,.jpg,.jpeg,.webp" class="text-input">
+        </div>
+        <div style="margin-top:18px">
+          <div class="panel-title">Smart Defaults</div>
+          <div id="c-defaults" style="font-size:12px;color:var(--t2);line-height:1.9;font-family:var(--mono);font-size:11px">Fill in Effective Date to see<br>auto-filled date defaults.</div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <div id="c-progress-inner" style="display:none;margin-bottom:12px">
+          <div class="progress-track"><div class="progress-fill" id="c-progress-fill"></div></div>
+          <div class="progress-label" id="c-progress-label">Building...</div>
+        </div>
+        <div class="alert alert-error"   id="c-error"></div>
+        <div class="alert alert-success" id="c-success"></div>
+        <button class="action-btn btn-cyan"  onclick="createPreview()">Build Preview</button>
+        <button class="action-btn btn-dark"  id="c-btn-generate" onclick="createGenerate()" disabled>Generate Document</button>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-title">Intake</div>
+        <div class="form-section">Identity</div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Policy Name</label><input class="text-input" id="c-name" type="text" placeholder="Access Control Policy"></div>
+          <div class="field"><label class="field-label">Policy Number</label><input class="text-input" id="c-number" type="text" placeholder="POL-0001"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Version</label><input class="text-input" id="c-version" type="text" value="V1.0"></div>
+          <div class="field"><label class="field-label">GRC ID</label><input class="text-input" id="c-grc" type="text" placeholder="Optional"></div>
+        </div>
+        <div class="form-section">Dates</div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Effective Date</label><input class="text-input" id="c-effective" type="text" placeholder="MM/DD/YYYY" oninput="updateDefaults()"></div>
+          <div class="field"><label class="field-label">Supersedes</label><input class="text-input" id="c-supersedes" type="text" placeholder="Optional"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Last Reviewed</label><input class="text-input" id="c-reviewed" type="text" placeholder="Defaults to Effective Date"></div>
+          <div class="field"><label class="field-label">Last Revised</label><input class="text-input" id="c-revised" type="text" placeholder="Defaults to Effective Date"></div>
+        </div>
+        <div class="form-section">Ownership</div>
+        <div class="field"><label class="field-label">Custodians</label><input class="text-input" id="c-custodians" type="text" placeholder="Policy custodian names"></div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Owner Name</label><input class="text-input" id="c-owner-name" type="text"></div>
+          <div class="field"><label class="field-label">Owner Title</label><input class="text-input" id="c-owner-title" type="text"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Approver Name</label><input class="text-input" id="c-approver-name" type="text"></div>
+          <div class="field"><label class="field-label">Approver Title</label><input class="text-input" id="c-approver-title" type="text"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label class="field-label">Date Signed</label><input class="text-input" id="c-signed" type="text" placeholder="Defaults to Effective Date"></div>
+          <div class="field"><label class="field-label">Date Approved</label><input class="text-input" id="c-approved" type="text" placeholder="Defaults to Date Signed"></div>
+        </div>
+        <div class="form-section">Content</div>
+        <div class="field"><label class="field-label">Purpose and Scope</label><textarea class="text-area" id="c-purpose" style="min-height:90px" placeholder="This policy establishes..."></textarea></div>
+        <div class="field"><label class="field-label">Definitions (Term: Definition, one per line)</label><textarea class="text-area" id="c-definitions"></textarea></div>
+        <div class="field"><label class="field-label">Policy Statement</label><textarea class="text-area" id="c-statement" style="min-height:90px"></textarea></div>
+        <div class="field"><label class="field-label">Procedures (use "- " for bullets)</label><textarea class="text-area" id="c-procedures" style="min-height:120px"></textarea></div>
+        <div class="field"><label class="field-label">Related Policies (one per line)</label><textarea class="text-area" id="c-related"></textarea></div>
+        <div class="field"><label class="field-label">Citations (one per line)</label><textarea class="text-area" id="c-citations"></textarea></div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-title">Preview</div>
+        <div class="preview-pane">
+          <div class="preview-empty" id="c-preview-empty">
+            <div class="preview-empty-icon"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M6 7h8M6 10h8M6 13h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            <div>Fill in the form and click Build Preview.</div>
+          </div>
+          <div id="c-preview-content" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /form mode -->
+
+  <!-- BIRD TALK MODE -->
+  <div id="create-chat-mode" style="display:none">
+  <div style="display:grid;grid-template-columns:0.38fr 0.62fr;gap:18px;align-items:start" class="create-grid">
+    <div>
+      <div class="panel">
+        <div class="panel-title">Policy in Progress</div>
+        <div class="tracker">
+          <div class="tracker-row"><span class="tracker-key">Policy Name</span><span class="tracker-val" id="cp-name">—</span></div>
+          <div class="tracker-row"><span class="tracker-key">Number</span><span class="tracker-val" id="cp-number">—</span></div>
+          <div class="tracker-row"><span class="tracker-key">Owner</span><span class="tracker-val" id="cp-owner">—</span></div>
+          <div class="tracker-row"><span class="tracker-key">Approver</span><span class="tracker-val" id="cp-approver">—</span></div>
+          <div class="tracker-row"><span class="tracker-key">Effective</span><span class="tracker-val" id="cp-date">—</span></div>
+          <div class="tracker-row"><span class="tracker-key">Purpose</span><span class="tracker-val" id="cp-purpose">—</span></div>
+          <div class="tracker-row"><span class="tracker-key">Frameworks</span><span class="tracker-val" id="cp-frameworks">—</span></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:14px">
+        <div class="alert alert-error"   id="chat-error"></div>
+        <div class="alert alert-success" id="chat-success"></div>
+        <button class="action-btn btn-cyan" id="chat-gen-btn" onclick="chatGenerate()" disabled>Generate Policy</button>
+        <button class="action-btn btn-dark" onclick="resetChat()">Start Over 🐔</button>
+      </div>
+    </div>
+
+    <!-- Chat window -->
+    <div class="panel chat-wrap">
+      <div class="chat-header">
+        <div class="chat-avatar">🐔</div>
+        <div>
+          <div class="chat-name">Midnight</div>
+          <div class="chat-role">Bird Talk · Policy Assistant</div>
+        </div>
+        <div class="chat-status">
+          <div class="status-dot"></div>
+          <div class="status-text">Online</div>
+        </div>
+      </div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <div id="chat-quick-replies" class="chat-quick-replies"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" class="chat-input" placeholder="Type your answer..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+        <button class="chat-send" onclick="sendChatMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+  </div><!-- /chat mode -->
+
+</div>
+</div><!-- /create -->
+
+</div><!-- /app -->
+
+
+<script>
+const API = 'https://midnight-2-0.onrender.com';
+
+// ── Password Gate ──────────────────────────────────────────────────────
+const PASSWORDS = {
+  'midnight2025': 'Enterprise',
+  'takeoff2025':  'Takeoff Internal',
+};
+
+function checkPassword() {
+  const val = document.getElementById('gate-input').value.trim().toLowerCase();
+  const tenant = PASSWORDS[val];
+  if(tenant) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app-nav').style.display = 'flex';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('nav-tenant').textContent = tenant;
+    sessionStorage.setItem('midnight-auth', val);
+    setTimeout(triggerInit, 100);
+  } else {
+    const err = document.getElementById('gate-error');
+    err.style.display = 'block';
+    document.getElementById('gate-input').style.borderColor = 'rgba(255,107,53,0.6)';
+    setTimeout(() => {
+      err.style.display = 'none';
+      document.getElementById('gate-input').style.borderColor = '';
+    }, 3000);
+  }
+}
+
+// Check session on load
+window.addEventListener('load', () => {
+  const saved = sessionStorage.getItem('midnight-auth');
+  if(saved && PASSWORDS[saved]) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app-nav').style.display = 'flex';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('nav-tenant').textContent = PASSWORDS[saved];
+    setTimeout(triggerInit, 100);
+  }
+});
+function triggerInit() {
+  const today = new Date();
+  const d = document.getElementById('c-effective');
+  if(d) d.value = (today.getMonth()+1)+'/'+today.getDate()+'/'+today.getFullYear();
+  updateDefaults();
+}
+
+// ── Routing ────────────────────────────────────────────────────────────
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('nav-'+page).classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+// ── Mode switcher ──────────────────────────────────────────────────────
+function switchMode(mode) {
+  const fc = document.getElementById('mode-form-card');
+  const cc = document.getElementById('mode-chat-card');
+  const fm = document.getElementById('create-form-mode');
+  const cm = document.getElementById('create-chat-mode');
+  if(mode === 'form') {
+    fm.style.display='block'; cm.style.display='none';
+    fc.classList.add('active'); cc.classList.remove('active');
+    fc.querySelector('.mode-eyebrow').style.color='var(--cyan)';
+    cc.querySelector('.mode-eyebrow').style.color='var(--t3)';
+  } else {
+    fm.style.display='none'; cm.style.display='block';
+    cc.classList.add('active'); fc.classList.remove('active');
+    cc.querySelector('.mode-eyebrow').style.color='var(--cyan)';
+    fc.querySelector('.mode-eyebrow').style.color='var(--t3)';
+    if(!chatStarted) startChat();
+  }
+}
+
+// ── Migrate ────────────────────────────────────────────────────────────
+let mPolicyData=null, mLogoToken=null, mFrameworkMap=null, mPolicyId=null;
+
+function mSetProgress(pct,label){
+  document.getElementById('m-progress').style.display='block';
+  document.getElementById('m-progress-fill').style.width=pct+'%';
+  document.getElementById('m-progress-label').textContent=label;
+}
+function mClear(){
+  ['m-error','m-success'].forEach(id=>{document.getElementById(id).style.display='none'});
+  document.getElementById('m-progress').style.display='none';
+}
+function mSetStep(n){
+  for(let i=1;i<=4;i++){
+    const el=document.getElementById('mstep-'+i);
+    el.className='step'+(i<n?' done':i===n?' active':'');
+    el.querySelector('.step-dot').textContent=i<n?'✓':i;
+  }
+}
+
+async function migratePreview(){
+  const file=document.getElementById('m-file').files[0];
+  const logo=document.getElementById('m-logo').files[0];
+  const tmpl=document.getElementById('m-template').value;
+  if(!file){showAlert('m-error','Upload a policy file first.');return;}
+  mClear(); mPolicyData=null; mLogoToken=null; mFrameworkMap=null; mPolicyId=null;
+  document.getElementById('m-preview-content').style.display='none';
+  document.getElementById('m-preview-empty').style.display='flex';
+  const btn=document.getElementById('m-btn-transform');
+  btn.disabled=true; btn.textContent='Processing...';
+  document.getElementById('m-btn-generate').disabled=true;
+  document.getElementById('m-btn-grc').disabled=true;
+  mSetStep(2);
+  const form=new FormData();
+  form.append('source_file',file);
+  form.append('template_name',tmpl);
+  if(logo) form.append('logo_file',logo);
+  try {
+    mSetProgress(20,'Uploading document...');
+    mSetProgress(45,'Extracting policy structure...');
+    const res=await fetch(API+'/api/migrate/preview',{method:'POST',body:form});
+    const raw=await res.text();
+    let parsed; try{parsed=JSON.parse(raw);}catch{parsed={detail:raw};}
+    if(!res.ok){showAlert('m-error',parsed.detail||'Preview failed.');mSetStep(1);return;}
+    mSetProgress(85,'Parsing extracted data...');
+    mPolicyData=parsed.policy_data;
+    mLogoToken=parsed.logo_token;
+    mFrameworkMap=parsed.framework_map||null;
+    mPolicyId=parsed.policy_id||null;
+    mSetProgress(100,'Done');
+    setTimeout(()=>{document.getElementById('m-progress').style.display='none';},500);
+    showAlert('m-success','✓ Extraction complete — review the preview then generate.');
+    mSetStep(3);
+    renderPreview(mPolicyData,'m-preview-content','m-preview-empty',mFrameworkMap);
+    document.getElementById('m-btn-generate').disabled=false;
+    document.getElementById('m-btn-grc').disabled=!mFrameworkMap;
+  } catch(e){showAlert('m-error','Request failed: '+e.message);mSetStep(1);}
+  finally{btn.disabled=false;btn.textContent='Transform Policy';}
+}
+
+async function migrateGenerate(){
+  if(!mPolicyData){showAlert('m-error','Run Transform first.');return;}
+  mClear();
+  const btn=document.getElementById('m-btn-generate');
+  btn.disabled=true; btn.textContent='Building...';
+  mSetStep(4);
+  mSetProgress(40,'Building document...');
+  try {
+    const res=await fetch(API+'/api/migrate/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({policy_data:mPolicyData,logo_token:mLogoToken})});
+    if(!res.ok){const t=await res.text();let p;try{p=JSON.parse(t);}catch{p={detail:t};}showAlert('m-error',p.detail||'Generate failed.');mSetStep(3);return;}
+    mSetProgress(90,'Finalizing...');
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=((mPolicyData.policy_number||'Policy')+' '+(mPolicyData.policy_name||'')+' '+(mPolicyData.version||'')+'-NEW.docx').trim();
+    a.click();URL.revokeObjectURL(url);
+    mSetProgress(100,'Download complete');
+    showAlert('m-success','✓ Document downloaded successfully.');
+  } catch(e){showAlert('m-error','Generate failed: '+e.message);mSetStep(3);}
+  finally{btn.disabled=false;btn.textContent='Generate Document';}
+}
+
+async function downloadGRC(){
+  if(!mFrameworkMap){showAlert('m-error','Run Transform first.');return;}
+  mClear();
+  const btn=document.getElementById('m-btn-grc');
+  btn.disabled=true; btn.textContent='Building GRC Summary...';
+  mSetProgress(40,'Building GRC summary...');
+  try {
+    const res=await fetch(API+'/api/migrate/grc-summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({policy_id:mPolicyId,policy_data:mPolicyData,framework_map:mFrameworkMap})});
+    if(!res.ok){const t=await res.text();let p;try{p=JSON.parse(t);}catch{p={detail:t};}showAlert('m-error',p.detail||'GRC summary failed.');return;}
+    mSetProgress(90,'Finalizing...');
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=((mPolicyData.policy_number||'Policy')+' '+(mPolicyData.policy_name||'')+'-GRC-Summary.docx').trim();
+    a.click();URL.revokeObjectURL(url);
+    mSetProgress(100,'GRC Summary downloaded');
+    showAlert('m-success','✓ GRC Summary downloaded — ready for your GRC tool.');
+  } catch(e){showAlert('m-error','GRC summary failed: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Download GRC Summary';}
+}
+
+// ── Preview renderer ───────────────────────────────────────────────────
+function renderPreview(pd,contentId,emptyId,fm){
+  const content=document.getElementById(contentId);
+  const empty=document.getElementById(emptyId);
+  let html=`<div style="font-size:16px;font-weight:600;color:var(--t0);margin-bottom:4px">${pd.policy_name||'—'}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      ${pd.policy_number?`<span class="preview-tag">${pd.policy_number}</span>`:''}
+      ${pd.version?`<span class="preview-tag">${pd.version}</span>`:''}
+      ${pd.effective_date?`<span class="preview-tag">${pd.effective_date}</span>`:''}
+    </div>
+    <div class="preview-divider"></div>
+    <div class="preview-field"><div class="preview-field-label">Owner</div><div class="preview-field-value">${(pd.owner_name||'')+((pd.owner_title)?' — '+pd.owner_title:'')}</div></div>
+    <div class="preview-field"><div class="preview-field-label">Approver</div><div class="preview-field-value">${(pd.approver_name||'')+((pd.approver_title)?' — '+pd.approver_title:'')}</div></div>
+    <div class="preview-divider"></div>`;
+  if(pd.purpose) html+=`<div class="preview-field"><div class="preview-field-label">Purpose</div><div class="preview-field-value">${pd.purpose.slice(0,350)}${pd.purpose.length>350?'…':''}</div></div>`;
+  const procs=(pd.procedures||[]).length;
+  const revs=(pd.revision_history||[]).length;
+  html+=`<div class="preview-divider"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="preview-field"><div class="preview-field-label">Procedures</div><div style="font-size:22px;font-weight:700;color:var(--cyan);font-family:var(--display)">${procs}</div></div>
+    <div class="preview-field"><div class="preview-field-label">Revision History</div><div style="font-size:22px;font-weight:700;color:var(--cyan);font-family:var(--display)">${revs}</div></div>
+  </div>`;
+
+  if(fm&&(fm.mapped_citations||fm.gaps)){
+    html+=`<div class="preview-divider"></div><div style="font-family:var(--mono);font-size:10px;color:var(--cyan);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:10px">Framework Mapping</div>`;
+    if(fm.audit_summary) html+=`<div style="font-size:12px;color:var(--t1);line-height:1.6;margin-bottom:10px;padding:10px;background:var(--s1);border-radius:6px;border:1px solid var(--b0)">${fm.audit_summary}</div>`;
+    const cov=(fm.overall_coverage||'').toLowerCase();
+    const covColor=cov==='strong'?'#00e89a':cov==='moderate'?'#faaa28':'#ff6b35';
+    html+=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-size:10px;color:var(--t3);font-family:var(--mono)">Coverage:</span>
+      <span style="background:${covColor}18;border:1px solid ${covColor}44;color:${covColor};border-radius:4px;padding:2px 10px;font-size:10px;font-family:var(--mono);text-transform:uppercase">${fm.overall_coverage||'unknown'}</span>
+      <span style="font-size:10px;color:var(--t3);font-family:var(--mono)">${fm.total_controls_mapped||0} mapped · ${fm.total_gaps||0} gaps</span>
+    </div>`;
+    if(fm.frameworks_covered&&fm.frameworks_covered.length){
+      html+='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">';
+      fm.frameworks_covered.forEach(f=>{html+=`<span class="preview-tag">${f}</span>`;});
+      html+='</div>';
+    }
+    const gaps=fm.gaps||[];
+    if(gaps.length){
+      html+=`<div style="font-size:10px;font-weight:600;color:var(--orange,#ff6b35);letter-spacing:0.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:8px">Gaps (${gaps.length})</div>`;
+      gaps.slice(0,3).forEach(g=>{
+        const rc=g.risk_level==='high'?'#ff6b35':g.risk_level==='medium'?'#faaa28':'#7d95b5';
+        html+=`<div class="gap-pill">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--t0)">${g.framework} ${g.control_id}</span>
+            <span style="font-size:10px;color:${rc};font-family:var(--mono);text-transform:uppercase">${g.risk_level}</span>
+          </div>
+          <div style="font-size:12px;color:var(--t2);margin-bottom:5px">${g.gap_description}</div>
+          <div style="font-size:11px;color:var(--cyan);border-top:1px solid var(--b0);padding-top:5px"><strong>Suggestion:</strong> ${g.suggestion}</div>
+        </div>`;
+      });
+      if(gaps.length>3) html+=`<div style="font-size:10px;color:var(--t3);font-family:var(--mono)">+ ${gaps.length-3} more in GRC Summary</div>`;
+    }
+  }
+  empty.style.display='none';
+  content.style.display='block';
+  content.innerHTML=html;
+}
+
+// ── Create helpers ─────────────────────────────────────────────────────
+let cPolicyData=null;
+
+function fallback(v,src){return (v&&v.trim())?v.trim():src;}
+function updateDefaults(){
+  const eff=document.getElementById('c-effective').value.trim();
+  if(!eff){document.getElementById('c-defaults').innerHTML='Fill in Effective Date to see auto-filled date defaults.';return;}
+  const rev=fallback(document.getElementById('c-reviewed').value,eff);
+  const revd=fallback(document.getElementById('c-revised').value,eff);
+  const sign=fallback(document.getElementById('c-signed').value,eff);
+  const appr=fallback(document.getElementById('c-approved').value,sign);
+  document.getElementById('c-defaults').innerHTML=
+    `<strong style="color:var(--t1)">Last Reviewed:</strong> ${rev||'—'}<br>`+
+    `<strong style="color:var(--t1)">Last Revised:</strong> ${revd||'—'}<br>`+
+    `<strong style="color:var(--t1)">Date Signed:</strong> ${sign||'—'}<br>`+
+    `<strong style="color:var(--t1)">Date Approved:</strong> ${appr||'—'}`;
+}
+function buildCreateData(){
+  const eff=document.getElementById('c-effective').value.trim();
+  const sign=fallback(document.getElementById('c-signed').value,eff);
+  const defs={};
+  (document.getElementById('c-definitions').value||'').split('\n').forEach(line=>{
+    line=line.trim();if(!line)return;
+    const i=line.indexOf(':');
+    if(i>0){defs[line.slice(0,i).trim()]=line.slice(i+1).trim();}else{defs[line]='';}
+  });
+  const procs=[];
+  (document.getElementById('c-procedures').value||'').split('\n').forEach(line=>{
+    line=line.trim();if(!line)return;
+    if(line.startsWith('- '))procs.push({type:'bullet',text:line.slice(2).trim()});
+    else procs.push({type:'para',text:line});
+  });
+  return {
+    policy_name:document.getElementById('c-name').value.trim(),
+    policy_number:document.getElementById('c-number').value.trim(),
+    version:document.getElementById('c-version').value.trim()||'V1.0',
+    grc_id:document.getElementById('c-grc').value.trim(),
+    supersedes:document.getElementById('c-supersedes').value.trim(),
+    effective_date:eff,
+    last_reviewed:fallback(document.getElementById('c-reviewed').value,eff),
+    last_revised:fallback(document.getElementById('c-revised').value,eff),
+    custodians:document.getElementById('c-custodians').value.trim(),
+    owner_name:document.getElementById('c-owner-name').value.trim(),
+    owner_title:document.getElementById('c-owner-title').value.trim(),
+    approver_name:document.getElementById('c-approver-name').value.trim(),
+    approver_title:document.getElementById('c-approver-title').value.trim(),
+    date_signed:sign,
+    date_approved:fallback(document.getElementById('c-approved').value,sign),
+    applicable_to:{hps_inc:false,agency:true,corporate:true,govt_affairs:false,legal_review:false},
+    policy_types:{carrier_specific:false,cross_carrier:false,global:true,on_off_hix:false},
+    line_of_business:{all_lobs:true,specific_lob:'',specific_lob_checked:false},
+    purpose:document.getElementById('c-purpose').value.trim(),
+    definitions:defs,
+    policy_statement:document.getElementById('c-statement').value.trim(),
+    procedures:procs,
+    related_policies:(document.getElementById('c-related').value||'').split('\n').map(l=>l.trim()).filter(Boolean),
+    citations:(document.getElementById('c-citations').value||'').split('\n').map(l=>l.trim()).filter(Boolean),
+    revision_history:[],
+    template_name:document.getElementById('c-template').value,
+  };
+}
+function createPreview(){
+  const pd=buildCreateData();
+  if(!pd.policy_name){showAlert('c-error','Policy Name is required.');return;}
+  cPolicyData=pd;
+  renderPreview(pd,'c-preview-content','c-preview-empty',null);
+  showAlert('c-success','✓ Preview ready — review above then generate.');
+  document.getElementById('c-btn-generate').disabled=false;
+}
+async function createGenerate(){
+  if(!cPolicyData){showAlert('c-error','Build preview first.');return;}
+  const btn=document.getElementById('c-btn-generate');
+  btn.disabled=true; btn.textContent='Building...';
+  document.getElementById('c-progress-inner').style.display='block';
+  document.getElementById('c-progress-fill').style.width='50%';
+  document.getElementById('c-progress-label').textContent='Building document...';
+  try {
+    const res=await fetch(API+'/api/create/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({policy_data:cPolicyData})});
+    if(!res.ok){const t=await res.text();let p;try{p=JSON.parse(t);}catch{p={detail:t};}showAlert('c-error',p.detail||'Generate failed.');return;}
+    document.getElementById('c-progress-fill').style.width='90%';
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=((cPolicyData.policy_number||'Policy')+' '+(cPolicyData.policy_name||'')+' '+(cPolicyData.version||'')+'-NEW.docx').trim();
+    a.click();URL.revokeObjectURL(url);
+    document.getElementById('c-progress-fill').style.width='100%';
+    document.getElementById('c-progress-label').textContent='Download complete';
+    showAlert('c-success','✓ Policy downloaded successfully.');
+  } catch(e){showAlert('c-error','Generate failed: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Generate Document';}
+}
+
+// ── Bird Talk ──────────────────────────────────────────────────────────
+let chatStarted=false,chatStep=0,chatData={},cPolicyDataChat=null,selectedReplies=[];
+
+const CHAT_STEPS=[
+  {key:'policy_name',question:"Cluck cluck! What are we calling this policy? 🐔",hint:"e.g. Access Control Policy, Password Policy...",replies:["Access Control Policy","Password Policy","Incident Response Policy","Data Classification Policy","Other (type below)"],update:(v)=>{chatData.policy_name=v;updateChatPanel('cp-name',v);}},
+  {key:'policy_number',question:"Got it! What policy number should I assign?",hint:"e.g. POL-0001",replies:["POL-0001","POL-0002","POL-0010","I'll type it"],update:(v)=>{chatData.policy_number=v;updateChatPanel('cp-number',v);}},
+  {key:'owner',question:"Who owns this policy? Give me name and title. 🐔",hint:"e.g. Alex Johnson, CISO",replies:[],update:(v)=>{const p=v.split(',');chatData.owner_name=p[0]?p[0].trim():v;chatData.owner_title=p[1]?p[1].trim():'';updateChatPanel('cp-owner',v);}},
+  {key:'approver',question:"Who approves it?",hint:"e.g. Jordan Williams, CIO",replies:["Same as owner","I'll type it"],update:(v)=>{if(v.toLowerCase().includes('same')){chatData.approver_name=chatData.owner_name;chatData.approver_title=chatData.owner_title;updateChatPanel('cp-approver',chatData.owner_name);}else{const p=v.split(',');chatData.approver_name=p[0]?p[0].trim():v;chatData.approver_title=p[1]?p[1].trim():'';updateChatPanel('cp-approver',v);}}},
+  {key:'effective_date',question:"When does it go into effect? 🐔",hint:"MM/DD/YYYY",replies:["Today","Start of next month","I'll type a date"],update:(v)=>{if(v.toLowerCase()==='today'){const t=new Date();v=(t.getMonth()+1)+'/'+t.getDate()+'/'+t.getFullYear();}else if(v.toLowerCase().includes('next month')){const t=new Date();t.setMonth(t.getMonth()+1);t.setDate(1);v=(t.getMonth()+1)+'/'+t.getDate()+'/'+t.getFullYear();}chatData.effective_date=v;chatData.last_reviewed=v;chatData.last_revised=v;chatData.date_signed=v;chatData.date_approved=v;updateChatPanel('cp-date',v);}},
+  {key:'purpose',question:"In a sentence or two — what does this policy cover and why does it exist? Bwawk! 🐔",hint:"This policy establishes...",replies:[],update:(v)=>{chatData.purpose=v;updateChatPanel('cp-purpose',v.slice(0,30)+'...');}},
+  {key:'frameworks',question:"Which compliance frameworks should I map this to? Pick all that apply.",hint:"Select multiple or type custom",replies:["HIPAA","HiTrust","PCI DSS","ISO 27001","NIST CSF","CoBIT","SOC 2","All of the above","Skip for now"],multi:true,update:(v)=>{chatData._frameworks=v;updateChatPanel('cp-frameworks',v);}},
+  {key:'policy_statement',question:"Last one — give me a one or two sentence policy statement. The core rule. 🐔",hint:"It is the policy of [org] that...",replies:[],update:(v)=>{chatData.policy_statement=v;}},
+];
+
+function startChat(){
+  chatStarted=true;chatStep=0;selectedReplies=[];
+  chatData={version:'V1.0',grc_id:'',supersedes:'',custodians:'',applicable_to:{hps_inc:false,agency:true,corporate:true,govt_affairs:false,legal_review:false},policy_types:{carrier_specific:false,cross_carrier:false,global:true,on_off_hix:false},line_of_business:{all_lobs:true,specific_lob:'',specific_lob_checked:false},definitions:{},procedures:[],related_policies:[],citations:[],revision_history:[],template_name:'Generic Policy Template'};
+  document.getElementById('chat-messages').innerHTML='';
+  document.getElementById('chat-quick-replies').innerHTML='';
+  document.getElementById('chat-gen-btn').disabled=true;
+  ['chat-error','chat-success'].forEach(id=>{document.getElementById(id).style.display='none';});
+  setTimeout(()=>addMessage('bot',"Hey! I'm Midnight 🐔 I'm going to help you build a compliance policy. It'll take about 2 minutes. Ready?"),400);
+  setTimeout(()=>addQuickReplies(["Let's go!","Tell me more"]),1000);
+}
+function addMessage(who,text){
+  const msgs=document.getElementById('chat-messages');
+  const isBot=who==='bot';
+  if(isBot){
+    const typing=document.createElement('div');
+    typing.style.cssText='display:flex;gap:8px;align-items:flex-end';
+    typing.innerHTML='<div style="font-size:20px">🐔</div><div style="background:var(--s2);padding:10px 14px;border-radius:12px;color:var(--t3);font-size:13px">...</div>';
+    msgs.appendChild(typing);
+    msgs.scrollTop=msgs.scrollHeight;
+    setTimeout(()=>{
+      msgs.removeChild(typing);
+      const div=document.createElement('div');
+      div.style.cssText='display:flex;gap:8px;align-items:flex-end';
+      div.innerHTML=`<div style="font-size:20px;flex-shrink:0">🐔</div><div style="max-width:78%;padding:10px 14px;border-radius:12px;background:var(--s2);color:var(--t1);font-size:13px;line-height:1.6;border-bottom-left-radius:3px">${text}</div>`;
+      msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+    },600);
+  } else {
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;flex-direction:row-reverse;gap:8px;align-items:flex-end';
+    div.innerHTML=`<div style="width:24px;height:24px;border-radius:50%;background:var(--s3);border:1px solid var(--b1);flex-shrink:0"></div><div style="max-width:78%;padding:10px 14px;border-radius:12px;background:var(--cyan);color:#000;font-size:13px;font-weight:500;line-height:1.6;border-bottom-right-radius:3px">${text}</div>`;
+    msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+  }
+}
+function addQuickReplies(options,multi=false){
+  const qr=document.getElementById('chat-quick-replies');
+  qr.innerHTML='';selectedReplies=[];
+  options.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='qr-btn';btn.textContent=opt;
+    btn.onclick=()=>{
+      if(multi){
+        if(selectedReplies.includes(opt)){selectedReplies=selectedReplies.filter(r=>r!==opt);btn.classList.remove('selected');}
+        else{selectedReplies.push(opt);btn.classList.add('selected');}
+        let cf=document.getElementById('qr-confirm');
+        if(!cf){cf=document.createElement('button');cf.id='qr-confirm';cf.className='qr-btn';cf.style.background='var(--cyan)';cf.style.color='#000';cf.style.borderColor='var(--cyan)';cf.textContent='Confirm';cf.onclick=()=>processReply(selectedReplies.join(', '));qr.appendChild(cf);}
+      } else {processReply(opt);}
+    };
+    qr.appendChild(btn);
+  });
+}
+function sendChatMessage(){
+  const input=document.getElementById('chat-input');
+  const val=input.value.trim();if(!val)return;
+  input.value='';document.getElementById('chat-quick-replies').innerHTML='';
+  processReply(val);
+}
+function processReply(val){
+  addMessage('user',val);
+  if(chatStep===0){
+    if(val.toLowerCase().includes("let's go")||val.toLowerCase().includes('lets go')){setTimeout(()=>askStep(0),800);return;}
+    if(val.toLowerCase().includes('more')){setTimeout(()=>addMessage('bot',"I ask about policy name, owner, dates, purpose, and frameworks. Then I build it for you. Easy! 🐔"),600);setTimeout(()=>addQuickReplies(["Let's go!"]),1400);return;}
+  }
+  if(chatStep>0&&chatStep<=CHAT_STEPS.length){CHAT_STEPS[chatStep-1].update(val);}
+  chatStep++;
+  if(chatStep<=CHAT_STEPS.length){setTimeout(()=>askStep(chatStep-1),700);}
+  else{finishChat();}
+}
+function askStep(idx){
+  const step=CHAT_STEPS[idx];
+  addMessage('bot',step.question);
+  if(step.hint){
+    setTimeout(()=>{
+      const qr=document.getElementById('chat-quick-replies');
+      qr.innerHTML='';
+      const hint=document.createElement('div');
+      hint.style.cssText='font-size:10px;color:var(--t3);width:100%;font-family:var(--mono);padding:0 2px;letter-spacing:0.06em';
+      hint.textContent=step.hint;qr.appendChild(hint);
+      if(step.replies&&step.replies.length)addQuickReplies(step.replies,step.multi||false);
+    },700);
+  } else if(step.replies&&step.replies.length){setTimeout(()=>addQuickReplies(step.replies,step.multi||false),700);}
+}
+function updateChatPanel(id,val){const el=document.getElementById(id);if(el){el.textContent=val;el.className='tracker-val filled';}}
+function finishChat(){
+  cPolicyDataChat={policy_name:chatData.policy_name||'',policy_number:chatData.policy_number||'',version:chatData.version||'V1.0',grc_id:'',supersedes:'',effective_date:chatData.effective_date||'',last_reviewed:chatData.last_reviewed||'',last_revised:chatData.last_revised||'',custodians:'',owner_name:chatData.owner_name||'',owner_title:chatData.owner_title||'',approver_name:chatData.approver_name||'',approver_title:chatData.approver_title||'',date_signed:chatData.date_signed||'',date_approved:chatData.date_approved||'',applicable_to:chatData.applicable_to,policy_types:chatData.policy_types,line_of_business:chatData.line_of_business,purpose:chatData.purpose||'',definitions:{},policy_statement:chatData.policy_statement||'',procedures:[],related_policies:[],citations:[],revision_history:[],template_name:'Generic Policy Template'};
+  setTimeout(()=>{addMessage('bot',"Cluck cluck! I've got everything I need. Ready to generate! 🐔🎉");document.getElementById('chat-gen-btn').disabled=false;document.getElementById('chat-quick-replies').innerHTML='';},600);
+}
+async function chatGenerate(){
+  if(!cPolicyDataChat)return;
+  const btn=document.getElementById('chat-gen-btn');
+  btn.disabled=true;btn.textContent='Generating...';
+  addMessage('bot',"On it! Building your policy now... 🐔");
+  try {
+    const res=await fetch(API+'/api/create/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({policy_data:cPolicyDataChat})});
+    if(!res.ok){const t=await res.text();let p;try{p=JSON.parse(t);}catch{p={detail:t};}showAlert('chat-error',p.detail||'Generate failed.');btn.disabled=false;btn.textContent='Generate Policy';return;}
+    const blob=await res.blob();const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=((cPolicyDataChat.policy_number||'Policy')+' '+(cPolicyDataChat.policy_name||'')+' '+(cPolicyDataChat.version||'')+'-NEW.docx').trim();
+    a.click();URL.revokeObjectURL(url);
+    addMessage('bot',"Done! Your policy has been downloaded. Nice work — bwawk! 🐔✅");
+    showAlert('chat-success','✓ Policy generated and downloaded.');
+  } catch(e){showAlert('chat-error','Generate failed: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Generate Policy';}
+}
+function resetChat(){chatStarted=false;chatStep=0;chatData={};cPolicyDataChat=null;startChat();['cp-name','cp-number','cp-owner','cp-approver','cp-date','cp-purpose','cp-frameworks'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='—';el.className='tracker-val';}});}
+
+// ── Utility ────────────────────────────────────────────────────────────
+function showAlert(id,msg){const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display='block';}}
+</script>
+</body>
+</html>
