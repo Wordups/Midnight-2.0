@@ -722,25 +722,10 @@ def run_framework_mapping(policy_data: dict[str, Any]) -> dict[str, Any]:
     return framework_map
 
 
-# ── GRC Summary Doc ───────────────────────────────────────────────────────────
+# ── GRC Summary Doc — PDF ────────────────────────────────────────────────────
+# Replaced docx with branded locked PDF via grc_summary_pdf.py
 
-def _add_para(
-    doc,
-    text: str,
-    bold: bool = False,
-    size: int = 10,
-    rgb: tuple | None = None,
-    align=WD_ALIGN_PARAGRAPH.LEFT,
-):
-    para = doc.add_paragraph()
-    para.alignment = align
-    run = para.add_run(text)
-    run.bold = bold
-    run.font.size = Pt(size)
-    run.font.name = "Arial"
-    if rgb:
-        run.font.color.rgb = RGBColor(*rgb)
-    return para
+from grc_summary_pdf import build_grc_pdf
 
 
 def build_grc_summary_doc(
@@ -750,117 +735,11 @@ def build_grc_summary_doc(
     name   = policy_data.get("policy_name",   "Policy")
     number = policy_data.get("policy_number", "SEC-P")
     ver    = policy_data.get("version",       "V1.0")
-    fname  = f"{number} {name} {ver}-GRC-Summary.docx"
+    fname  = f"{number} {name} {ver}-GRC-Summary.pdf"
 
-    doc = DocxDocument()
-    for sec in doc.sections:
-        sec.left_margin = sec.right_margin = sec.top_margin = sec.bottom_margin = Pt(72)
-
-    _add_para(doc, "MIDNIGHT — GRC COMPLIANCE SUMMARY",
-              bold=True, size=9, rgb=(120, 120, 120),
-              align=WD_ALIGN_PARAGRAPH.CENTER)
-    _add_para(doc, "")
-    _add_para(doc, name, bold=True, size=18)
-    _add_para(doc, f"{number}  ·  {ver}  ·  Framework Compliance Report",
-              size=10, rgb=(80, 110, 150))
-    _add_para(doc, "")
-
-    summary = framework_map.get("audit_summary", "")
-    if summary:
-        _add_para(doc, "AUDIT SUMMARY", bold=True, size=10, rgb=(0, 140, 170))
-        _add_para(doc, summary, size=10)
-        _add_para(doc, "")
-
-    _add_para(doc, "COVERAGE OVERVIEW", bold=True, size=10, rgb=(0, 140, 170))
-    t = doc.add_table(rows=4, cols=2)
-    t.style = "Table Grid"
-    overview = [
-        ("Overall Coverage",    framework_map.get("overall_coverage", "—").upper()),
-        ("Controls Mapped",     str(framework_map.get("total_controls_mapped", 0))),
-        ("Gaps Identified",     str(framework_map.get("total_gaps", 0))),
-        ("Frameworks Assessed", ", ".join(framework_map.get("frameworks_covered", []))
-                                 or "HIPAA, HiTrust, PCI DSS, ISO 27001, NIST CSF, CoBIT"),
-    ]
-    for i, (lbl, val) in enumerate(overview):
-        t.rows[i].cells[0].text = lbl
-        t.rows[i].cells[1].text = val
-        for cell in t.rows[i].cells:
-            for para in cell.paragraphs:
-                for run in para.runs:
-                    run.font.size = Pt(9)
-                    run.font.name = "Arial"
-        if t.rows[i].cells[0].paragraphs[0].runs:
-            t.rows[i].cells[0].paragraphs[0].runs[0].bold = True
-    _add_para(doc, "")
-
-    citations = framework_map.get("mapped_citations", [])
-    if citations:
-        _add_para(doc, "CONTROLS COVERED", bold=True, size=10, rgb=(0, 140, 170))
-        t2 = doc.add_table(rows=1 + len(citations), cols=4)
-        t2.style = "Table Grid"
-        for i, h in enumerate(["Framework", "Control ID", "Control Name", "Policy Section"]):
-            t2.rows[0].cells[i].text = h
-            if t2.rows[0].cells[i].paragraphs[0].runs:
-                t2.rows[0].cells[i].paragraphs[0].runs[0].bold = True
-                t2.rows[0].cells[i].paragraphs[0].runs[0].font.size = Pt(9)
-        for ri, c in enumerate(citations, 1):
-            for ci, v in enumerate([
-                str(c.get("framework",    "")),
-                str(c.get("control_id",   "")),
-                str(c.get("control_name", "")),
-                str(c.get("policy_section", "")),
-            ]):
-                cell = t2.rows[ri].cells[ci]
-                cell.text = v
-                if cell.paragraphs[0].runs:
-                    cell.paragraphs[0].runs[0].font.size = Pt(9)
-                    cell.paragraphs[0].runs[0].font.name = "Arial"
-        _add_para(doc, "")
-
-    gaps = framework_map.get("gaps", [])
-    if gaps:
-        _add_para(doc, "COMPLIANCE GAPS — ACTION REQUIRED",
-                  bold=True, size=10, rgb=(190, 50, 50))
-        for i, gap in enumerate(gaps, 1):
-            risk = str(gap.get("risk_level", "medium")).upper()
-            _add_para(doc,
-                      f"Gap {i} — {gap.get('framework', '')} {gap.get('control_id', '')}",
-                      bold=True, size=10)
-            t3 = doc.add_table(rows=4, cols=2)
-            t3.style = "Table Grid"
-            for ri, (lbl, val) in enumerate([
-                ("Control",    f"{gap.get('control_id', '')} — {gap.get('control_name', '')}"),
-                ("Risk",       risk),
-                ("Gap",        str(gap.get("gap_description", ""))),
-                ("Suggestion", str(gap.get("suggestion", ""))),
-            ]):
-                t3.rows[ri].cells[0].text = lbl
-                t3.rows[ri].cells[1].text = val
-                for cell in t3.rows[ri].cells:
-                    for para in cell.paragraphs:
-                        for run in para.runs:
-                            run.font.size = Pt(9)
-                            run.font.name = "Arial"
-                if t3.rows[ri].cells[0].paragraphs[0].runs:
-                    t3.rows[ri].cells[0].paragraphs[0].runs[0].bold = True
-            _add_para(doc, "")
-
-    _add_para(doc, "Generated by Midnight · Takeoff · For internal use only.",
-              size=8, rgb=(150, 150, 150), align=WD_ALIGN_PARAGRAPH.CENTER)
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
-        tmp_path = tmp.name
-    try:
-        doc.save(tmp_path)
-        with open(tmp_path, "rb") as f:
-            doc_bytes = f.read()
-    finally:
-        try:
-            os.unlink(tmp_path)
-        except Exception:
-            pass
-
-    return fname, doc_bytes
+    print(f"GRC PDF  |  {name}  |  {number}  |  {ver}")
+    pdf_bytes = build_grc_pdf(policy_data, framework_map)
+    return fname, pdf_bytes
 
 
 # ── Logo ──────────────────────────────────────────────────────────────────────
