@@ -597,6 +597,68 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         (f"Specific LOB [{_safe(lob.get('specific_lob')) or 'INSERT HERE'}]", _bool(lob.get("specific_lob_checked"))),
     ]
 
+    LEFT = int(W * 0.47)
+    TEXT = int(W * 0.49)
+    CHECK = W - LEFT - TEXT
+
+    t2 = _new_table(doc, len(rows_def), 3, [LEFT, TEXT, CHECK], W)
+
+    # LEFT PANEL
+    left_anchor = t2.rows[0].cells[0]
+    for i in range(1, len(rows_def)):
+        left_anchor = left_anchor.merge(t2.rows[i].cells[0])
+
+    _style_cell(left_anchor, GRAY_LABEL)
+    _cell_margins(left_anchor, top=80, bottom=80, left=90, right=90)
+    _cell_valign(left_anchor, WD_ALIGN_VERTICAL.CENTER)
+    left_anchor.text = ""
+
+    lp = left_anchor.paragraphs[0]
+    lp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _para_spacing(lp, 0, 0)
+    styled_run(lp, "Applicable To:\n(select all that apply)", bold=True, size_pt=BODY_PT)
+
+    # ROW HEIGHTS
+    row_heights = [310, 310, 170, 310, 310, 310, 170, 310, 310]
+
+    for i, (label, checked) in enumerate(rows_def):
+        row = t2.rows[i]
+        _row_height(row, row_heights[i], exact=True)
+        _no_row_break(row)
+
+        text_cell = row.cells[1]
+        check_cell = row.cells[2]
+        is_header = checked is None
+
+        # ✅ FULL GRAY RIGHT BLOCK
+        _style_cell(text_cell, GRAY_SUBHDR if is_header else GRAY_LABEL)
+        _style_cell(check_cell, GRAY_SUBHDR if is_header else GRAY_LABEL)
+
+        _cell_margins(text_cell, top=20, bottom=20, left=45, right=45)
+        _cell_valign(text_cell, WD_ALIGN_VERTICAL.CENTER)
+        text_cell.text = ""
+
+        tp = text_cell.paragraphs[0]
+        tp.alignment = WD_ALIGN_PARAGRAPH.CENTER if is_header else WD_ALIGN_PARAGRAPH.RIGHT
+        _para_spacing(tp, 0, 0)
+
+        if is_header:
+            styled_run(tp, label, bold=True, size_pt=BASE_PT)
+        else:
+            styled_run(tp, label, size_pt=BASE_PT)
+
+        # CHECKBOX
+        _cell_margins(check_cell, top=0, bottom=0, left=0, right=0)
+        _cell_valign(check_cell, WD_ALIGN_VERTICAL.CENTER)
+        check_cell.text = ""
+
+        cp = check_cell.paragraphs[0]
+        cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        _para_spacing(cp, 0, 0)
+
+        if not is_header:
+            styled_run(cp, _checkbox(checked), size_pt=BASE_PT)
+
     # Closer to the true HPS geometry
     LEFT = int(W * 0.47)
     TEXT = int(W * 0.49)
