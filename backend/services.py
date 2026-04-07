@@ -9,7 +9,7 @@ Pipeline:
     run_framework_mapping()   → framework_map{}
         ↓
     build_output_doc()        → policy.docx
-    build_grc_summary_doc()   → grc_summary.docx
+    build_grc_summary_doc()   → grc_summary.pdf
 """
 
 from __future__ import annotations
@@ -24,8 +24,6 @@ from pathlib import Path
 from typing import Any
 
 from docx import Document as DocxDocument
-from docx.shared import Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from groq import Groq
 
 from hps_policy_migration_builder import build_policy_document
@@ -62,7 +60,7 @@ TEMPLATE_REGISTRY = {
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL   = "llama-3.3-70b-versatile"
 MIN_TEXT_LEN = 50
-MAX_SOURCE_LEN          = 24000
+MAX_SOURCE_LEN = 24000
 MAX_POLICY_ANALYSIS_LEN = 16000
 
 # ── Prompts ───────────────────────────────────────────────────────────────────
@@ -337,22 +335,14 @@ def _groq_call(prompt: str, content: str, max_tokens: int = 8000) -> str:
 
 
 def _sanitize_llm_output(raw: str) -> str:
-    """
-    Sanitize LLM output before JSON parsing.
-    Catches the most common failure modes: smart quotes, null bytes,
-    unicode dashes, and Windows line endings.
-    """
-    # Normalize line endings
     raw = raw.replace("\r\n", "\n").replace("\r", "\n")
-    # Remove null bytes
     raw = raw.replace("\x00", "")
-    # Normalize smart quotes → straight quotes
-    raw = (raw
-           .replace("\u201c", '"').replace("\u201d", '"')
-           .replace("\u2018", "'").replace("\u2019", "'"))
-    # Normalize unicode dashes that break JSON strings
+    raw = (
+        raw
+        .replace("\u201c", '"').replace("\u201d", '"')
+        .replace("\u2018", "'").replace("\u2019", "'")
+    )
     raw = raw.replace("\u2013", "-").replace("\u2014", "-")
-    # Remove zero-width characters
     raw = raw.replace("\u200b", "").replace("\ufeff", "")
     return raw
 
@@ -369,14 +359,13 @@ def _extract_json_object(raw: str) -> str:
     raw = _sanitize_llm_output(raw)
     raw = _strip_code_fences(raw)
 
-    # Handle POLICY_DATA = {...} prefix
     if raw.startswith("POLICY_DATA ="):
         raw = raw.split("=", 1)[1].strip()
     elif raw.startswith("POLICY_DATA="):
         raw = raw.split("=", 1)[1].strip()
 
     first = raw.find("{")
-    last  = raw.rfind("}")
+    last = raw.rfind("}")
     if first == -1 or last == -1 or last < first:
         raise ValueError("Model response did not contain a JSON object.")
 
@@ -388,8 +377,8 @@ def _json_error_context(raw: str, lineno: int | None, window: int = 6) -> str:
     if not lines:
         return raw[:600]
     line_no = lineno or 1
-    start   = max(0, line_no - window - 1)
-    end     = min(len(lines), line_no + window)
+    start = max(0, line_no - window - 1)
+    end = min(len(lines), line_no + window)
     return "\n".join(f"{i + 1}: {lines[i]}" for i in range(start, end))
 
 
@@ -406,22 +395,24 @@ def _normalize_revision_history(value: Any) -> list[dict[str, str]]:
         for entry in value:
             if isinstance(entry, dict):
                 out.append({
-                    "date":        str(entry.get("date", "")).strip(),
-                    "version":     str(entry.get("version", "")).strip(),
-                    "updated_by":  str(entry.get("updated_by", "")).strip(),
+                    "date": str(entry.get("date", "")).strip(),
+                    "version": str(entry.get("version", "")).strip(),
+                    "updated_by": str(entry.get("updated_by", "")).strip(),
                     "description": str(entry.get("description", "")).strip(),
                 })
             elif isinstance(entry, (list, tuple)):
                 padded = list(entry) + ["", "", "", ""]
                 out.append({
-                    "date":        str(padded[0]).strip(),
-                    "version":     str(padded[1]).strip(),
-                    "updated_by":  str(padded[2]).strip(),
+                    "date": str(padded[0]).strip(),
+                    "version": str(padded[1]).strip(),
+                    "updated_by": str(padded[2]).strip(),
                     "description": str(padded[3]).strip(),
                 })
             else:
                 out.append({
-                    "date": "", "version": "", "updated_by": "",
+                    "date": "",
+                    "version": "",
+                    "updated_by": "",
                     "description": str(entry).strip(),
                 })
     return out
@@ -490,9 +481,9 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
 
     app = data.get("applicable_to", {}) if isinstance(data.get("applicable_to"), dict) else {}
     data["applicable_to"] = {
-        "hps_inc":      _coerce_bool(app.get("hps_inc"),      False),
-        "agency":       _coerce_bool(app.get("agency"),       True),
-        "corporate":    _coerce_bool(app.get("corporate"),    True),
+        "hps_inc": _coerce_bool(app.get("hps_inc"), False),
+        "agency": _coerce_bool(app.get("agency"), True),
+        "corporate": _coerce_bool(app.get("corporate"), True),
         "govt_affairs": _coerce_bool(app.get("govt_affairs"), False),
         "legal_review": _coerce_bool(app.get("legal_review"), False),
     }
@@ -500,15 +491,15 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
     pol = data.get("policy_types", {}) if isinstance(data.get("policy_types"), dict) else {}
     data["policy_types"] = {
         "carrier_specific": _coerce_bool(pol.get("carrier_specific"), False),
-        "cross_carrier":    _coerce_bool(pol.get("cross_carrier"),    False),
-        "global":           _coerce_bool(pol.get("global"),           False),
-        "on_off_hix":       _coerce_bool(pol.get("on_off_hix"),       False),
+        "cross_carrier": _coerce_bool(pol.get("cross_carrier"), False),
+        "global": _coerce_bool(pol.get("global"), False),
+        "on_off_hix": _coerce_bool(pol.get("on_off_hix"), False),
     }
 
     lob = data.get("line_of_business", {}) if isinstance(data.get("line_of_business"), dict) else {}
     data["line_of_business"] = {
-        "all_lobs":           _coerce_bool(lob.get("all_lobs"), True),
-        "specific_lob":       str(lob.get("specific_lob", "") or "").strip(),
+        "all_lobs": _coerce_bool(lob.get("all_lobs"), True),
+        "specific_lob": str(lob.get("specific_lob", "") or "").strip(),
         "specific_lob_checked": _coerce_bool(lob.get("specific_lob_checked"), False),
     }
 
@@ -528,11 +519,11 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
         else:
             data[key] = []
 
-    data["procedures"]       = _normalize_procedures(data.get("procedures", []))
+    data["procedures"] = _normalize_procedures(data.get("procedures", []))
     data["revision_history"] = _normalize_revision_history(data.get("revision_history", []))
 
     required = ["policy_name", "policy_number", "version"]
-    missing  = [k for k in required if not data.get(k)]
+    missing = [k for k in required if not data.get(k)]
     if missing:
         raise ValueError(f"Missing required fields after extraction: {', '.join(missing)}")
 
@@ -550,7 +541,7 @@ def _parse_policy_data(raw: str) -> dict[str, Any]:
 
         try:
             repaired_json = _repair_json_via_llm(raw_json)
-            parsed        = json.loads(repaired_json)
+            parsed = json.loads(repaired_json)
             print("[INFO] POLICY_DATA repaired successfully by secondary JSON repair pass.")
         except Exception as repair_error:
             context = _json_error_context(raw_json, e.lineno)
@@ -632,15 +623,15 @@ def _policy_to_text(policy_data: dict[str, Any]) -> str:
 
 def _empty_map(policy_data: dict[str, Any]) -> dict[str, Any]:
     return {
-        "policy_name":          policy_data.get("policy_name", ""),
-        "policy_type":          "",
-        "overall_coverage":     "unknown",
-        "mapped_citations":     [],
-        "gaps":                 [],
-        "audit_summary":        "Framework mapping unavailable for this policy.",
-        "frameworks_covered":   [],
+        "policy_name": policy_data.get("policy_name", ""),
+        "policy_type": "",
+        "overall_coverage": "unknown",
+        "mapped_citations": [],
+        "gaps": [],
+        "audit_summary": "Framework mapping unavailable for this policy.",
+        "frameworks_covered": [],
         "total_controls_mapped": 0,
-        "total_gaps":           0,
+        "total_gaps": 0,
     }
 
 
@@ -649,7 +640,7 @@ def _parse_framework_map(raw: str, policy_data: dict[str, Any]) -> dict[str, Any
     raw = _strip_code_fences(raw)
 
     first = raw.find("{")
-    last  = raw.rfind("}")
+    last = raw.rfind("}")
     if first == -1 or last == -1 or last < first:
         return _empty_map(policy_data)
 
@@ -723,22 +714,28 @@ def run_framework_mapping(policy_data: dict[str, Any]) -> dict[str, Any]:
 
 
 # ── GRC Summary Doc — PDF ────────────────────────────────────────────────────
-# Replaced docx with branded locked PDF via grc_summary_pdf.py
-
-from grc_summary_pdf import build_grc_pdf
-
 
 def build_grc_summary_doc(
     policy_data: dict[str, Any],
     framework_map: dict[str, Any],
 ) -> tuple[str, bytes]:
-    name   = policy_data.get("policy_name",   "Policy")
+    name = policy_data.get("policy_name", "Policy")
     number = policy_data.get("policy_number", "SEC-P")
-    ver    = policy_data.get("version",       "V1.0")
-    fname  = f"{number} {name} {ver}-GRC-Summary.pdf"
+    ver = policy_data.get("version", "V1.0")
+    fname = f"{number} {name} {ver}-GRC-Summary.pdf"
 
     print(f"GRC PDF  |  {name}  |  {number}  |  {ver}")
-    pdf_bytes = build_grc_pdf(policy_data, framework_map)
+
+    try:
+        from grc_summary_pdf import build_grc_pdf
+    except Exception as e:
+        raise RuntimeError(f"[IMPORT ERROR] grc_summary_pdf failed: {e}")
+
+    try:
+        pdf_bytes = build_grc_pdf(policy_data, framework_map)
+    except Exception as e:
+        raise RuntimeError(f"[PDF ERROR] GRC generation failed: {e}")
+
     return fname, pdf_bytes
 
 
@@ -747,7 +744,7 @@ def build_grc_summary_doc(
 def save_logo_bytes(filename: str, file_bytes: bytes) -> str:
     tmp_dir = os.path.join(tempfile.gettempdir(), "midnight_logos")
     os.makedirs(tmp_dir, exist_ok=True)
-    ext  = Path(filename).suffix.lower() or ".png"
+    ext = Path(filename).suffix.lower() or ".png"
     stem = "".join(c for c in Path(filename).stem if c.isalnum() or c in "-_") or "logo"
     path = os.path.join(tmp_dir, f"{stem}_{uuid.uuid4().hex[:8]}{ext}")
     with open(path, "wb") as f:
@@ -761,12 +758,12 @@ def build_output_doc(
     policy_data: dict[str, Any],
     logo_path: str | None = None,
 ) -> tuple[str, bytes]:
-    name          = policy_data.get("policy_name",     "Policy")
-    number        = policy_data.get("policy_number",   "POL")
-    ver           = policy_data.get("version",         "V1.0")
-    template_name = policy_data.get("template_name",   "Generic Policy Template")
-    logo_pos      = policy_data.get("logo_position",   "left")
-    fname         = f"{number} {name} {ver}-NEW.docx"
+    name = policy_data.get("policy_name", "Policy")
+    number = policy_data.get("policy_number", "POL")
+    ver = policy_data.get("version", "V1.0")
+    template_name = policy_data.get("template_name", "Generic Policy Template")
+    logo_pos = policy_data.get("logo_position", "left")
+    fname = f"{number} {name} {ver}-NEW.docx"
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         tmp_path = tmp.name
@@ -775,12 +772,10 @@ def build_output_doc(
         registry_key = TEMPLATE_REGISTRY.get(template_name)
 
         if registry_key == "_hps":
-            # Enterprise Template A or explicit HPS → HPS builder
             print(f"BUILD  |  template: {template_name}  →  HPS builder")
             build_policy_document(policy_data, tmp_path, logo_path=logo_path)
 
         elif registry_key == "_generic" and _TEMPLATES_AVAILABLE and _build_generic:
-            # Generic family → generic builder
             print(f"BUILD  |  template: {template_name}  →  generic builder")
             _build_generic(
                 policy_data,
@@ -790,7 +785,6 @@ def build_output_doc(
             )
 
         elif registry_key is None:
-            # Unknown template — warn and fall back to generic
             print(f"[WARN] Template '{template_name}' not in registry — falling back to generic")
             if _TEMPLATES_AVAILABLE and _build_generic:
                 _build_generic(
@@ -804,7 +798,6 @@ def build_output_doc(
                 build_policy_document(policy_data, tmp_path, logo_path=logo_path)
 
         else:
-            # Registry key exists but builder not yet implemented — fall back gracefully
             print(f"[WARN] Builder for '{registry_key}' not yet implemented — using generic")
             if _TEMPLATES_AVAILABLE and _build_generic:
                 _build_generic(
