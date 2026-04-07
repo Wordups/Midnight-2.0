@@ -62,7 +62,7 @@ BASE_PT = 9.5
 BODY_PT = 10.0
 SMALL_PT = 7.5
 LABEL_PT = 9.0
-BANNER_LOGO_WIDTH_IN = 3.45
+BANNER_LOGO_WIDTH_IN = 4.25
 
 
 # ──────────────────────────────────────────────────────────────────────────────
