@@ -62,7 +62,10 @@ BASE_PT = 9.5
 BODY_PT = 10.0
 SMALL_PT = 7.5
 LABEL_PT = 9.0
-BANNER_LOGO_WIDTH_IN = 4.25
+
+# Important:
+# This controls the LOGO size, not the banner cell size.
+BANNER_LOGO_WIDTH_IN = 3.35
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -421,7 +424,7 @@ def _setup_document(doc: Document):
     doc.styles["Normal"].paragraph_format.space_after = Pt(0)
 
 
-def _gap(doc, before=24, after=0):
+def _gap(doc, before=18, after=0):
     p = doc.add_paragraph()
     _para_spacing(p, before, after)
 
@@ -435,10 +438,14 @@ def render_header_banner(doc: Document, logo_path: str | None):
 
     banner = table.rows[0].cells[0]
     _style_cell(banner, GRAY_BANNER)
-    _cell_margins(banner, top=0, bottom=0, left=0, right=0)
     _cell_valign(banner, WD_ALIGN_VERTICAL.CENTER)
-    _row_height(table.rows[0], 980, exact=True)
+
+    # This controls the BOX size.
+    _row_height(table.rows[0], 1280, exact=True)
     _no_row_break(table.rows[0])
+
+    # Padding inside the banner so the logo sits centered with breathing room.
+    _cell_margins(banner, top=100, bottom=100, left=0, right=0)
 
     banner.text = ""
     p = banner.paragraphs[0]
@@ -486,58 +493,52 @@ def render_metadata_zone(doc: Document, data: dict[str, Any]):
         _value_para(cell, text, align=align)
 
     row_heights = {
-        0: 360,   # Policy Name
-        1: 360,   # Policy Number / Version
-        2: 360,   # GRC ID Number row
-        3: 430,   # Supersedes / Effective
-        4: 430,   # Last reviewed / revised
-        5: 520,   # Custodian row - deliberately taller
-        6: 300,   # owner/approver header
-        7: 320,   # name
-        8: 320,   # title
-        9: 700,   # signature
-        10: 320,  # dates
+        0: 300,   # Policy Name - slightly tighter so it tucks under the larger banner
+        1: 340,
+        2: 340,
+        3: 420,
+        4: 420,
+        5: 620,   # Custodian row expanded
+        6: 300,
+        7: 320,
+        8: 320,
+        9: 700,
+        10: 320,
     }
 
     for idx, twips in row_heights.items():
         _row_height(top.rows[idx], twips, exact=False)
         _no_row_break(top.rows[idx])
 
-    # Row 0
     _prep_label(top.cell(0, 0), "Policy Name")
     merged = top.cell(0, 1).merge(top.cell(0, 3))
     _prep_value(merged, _safe(data.get("policy_name")))
 
-    # Row 1
     _prep_label(top.cell(1, 0), "Policy Number")
     _prep_value(top.cell(1, 1), _safe(data.get("policy_number")))
     _prep_label(top.cell(1, 2), "Version Number")
     _prep_value(top.cell(1, 3), _safe(data.get("version")))
 
-    # Row 2
     _prep_label(top.cell(2, 0), "")
     _prep_value(top.cell(2, 1), "")
     _prep_label(top.cell(2, 2), "GRC ID Number")
     _prep_value(top.cell(2, 3), _safe(data.get("grc_id")))
 
-    # Row 3
     _prep_label(top.cell(3, 0), "Supersedes Policy")
     _prep_value(top.cell(3, 1), _safe(data.get("supersedes")))
     _prep_label(top.cell(3, 2), "Effective Date")
     _prep_value(top.cell(3, 3), _safe(data.get("effective_date")))
 
-    # Row 4
     _prep_label(top.cell(4, 0), "Last Reviewed\nDate")
     _prep_value(top.cell(4, 1), _safe(data.get("last_reviewed")))
     _prep_label(top.cell(4, 2), "Last Revised Date")
     _prep_value(top.cell(4, 3), _safe(data.get("last_revised")))
 
-    # Row 5 - custodian, merged and allowed to breathe
     _prep_label(top.cell(5, 0), "Policy Custodian\nName(s)")
     merged = top.cell(5, 1).merge(top.cell(5, 3))
     _style_cell(merged, WHITE)
     _cell_valign(merged, WD_ALIGN_VERTICAL.CENTER)
-    _cell_margins(merged, top=55, bottom=55, left=60, right=60)
+    _cell_margins(merged, top=65, bottom=65, left=60, right=60)
     _value_para(
         merged,
         _safe(data.get("custodians")),
@@ -545,7 +546,6 @@ def render_metadata_zone(doc: Document, data: dict[str, Any]):
         multiline=True,
     )
 
-    # Row 6 - owner/approver header
     left_hdr = top.cell(6, 0).merge(top.cell(6, 1))
     right_hdr = top.cell(6, 2).merge(top.cell(6, 3))
     _style_cell(left_hdr, GRAY_SUBHDR)
@@ -555,25 +555,21 @@ def render_metadata_zone(doc: Document, data: dict[str, Any]):
     _center_bold_para(left_hdr, "Policy Owner")
     _center_bold_para(right_hdr, "Policy Approver")
 
-    # Row 7
     _prep_label(top.cell(7, 0), "Name")
     _prep_value(top.cell(7, 1), _safe(data.get("owner_name")))
     _prep_label(top.cell(7, 2), "Name")
     _prep_value(top.cell(7, 3), _safe(data.get("approver_name")))
 
-    # Row 8
     _prep_label(top.cell(8, 0), "Title")
     _prep_value(top.cell(8, 1), _safe(data.get("owner_title")))
     _prep_label(top.cell(8, 2), "Title")
     _prep_value(top.cell(8, 3), _safe(data.get("approver_title")))
 
-    # Row 9
     _prep_label(top.cell(9, 0), "Signature")
     _prep_value(top.cell(9, 1), "")
     _prep_label(top.cell(9, 2), "Signature")
     _prep_value(top.cell(9, 3), "")
 
-    # Row 10
     _prep_label(top.cell(10, 0), "Date Signed")
     _prep_value(top.cell(10, 1), _safe(data.get("date_signed")))
     _prep_label(top.cell(10, 2), "Date Approved")
