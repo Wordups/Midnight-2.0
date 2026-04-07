@@ -1,3 +1,15 @@
+from __future__ import annotations
+
+import os
+from typing import Any
+
+from docx import Document
+from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Inches, Pt, RGBColor
+
 """
 hps_policy_migration_builder.py
 
@@ -11,19 +23,6 @@ Design goals:
 - Keep signature fields blank for review
 - Allow longer metadata values (like custodians) without clipping
 """
-
-from __future__ import annotations
-
-import os
-from typing import Any
-
-from docx import Document
-from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml import OxmlElement
-from docx.oxml.ns import qn
-from docx.shared import Pt, RGBColor, Inches
-
 
 # ──────────────────────────────────────────────────────────────────────────────
 # PAGE GEOMETRY
@@ -63,8 +62,7 @@ BODY_PT = 10.0
 SMALL_PT = 7.5
 LABEL_PT = 9.0
 
-# Important:
-# This controls the LOGO size, not the banner cell size.
+# Controls logo size only, not banner height.
 BANNER_LOGO_WIDTH_IN = 3.35
 
 
@@ -106,12 +104,12 @@ def styled_run(
     para,
     text,
     *,
-    bold=False,
-    italic=False,
-    underline=False,
-    color_hex=BLACK,
-    size_pt=BASE_PT,
-    font=FONT_FAMILY,
+    bold: bool = False,
+    italic: bool = False,
+    underline: bool = False,
+    color_hex: str = BLACK,
+    size_pt: float = BASE_PT,
+    font: str = FONT_FAMILY,
 ):
     run = para.add_run(text)
     run.bold = bold
@@ -124,7 +122,7 @@ def styled_run(
     return run
 
 
-def _para_spacing(para, before=0, after=0, line=None):
+def _para_spacing(para, before: int = 0, after: int = 0, line: int | None = None):
     pPr = para._p.get_or_add_pPr()
     _remove(pPr, "w:spacing")
     spc = OxmlElement("w:spacing")
@@ -136,21 +134,21 @@ def _para_spacing(para, before=0, after=0, line=None):
     pPr.append(spc)
 
 
-def _keep_with_next(para, on=True):
+def _keep_with_next(para, on: bool = True):
     pPr = para._p.get_or_add_pPr()
     _remove(pPr, "w:keepNext")
     if on:
         pPr.append(OxmlElement("w:keepNext"))
 
 
-def _keep_lines(para, on=True):
+def _keep_lines(para, on: bool = True):
     pPr = para._p.get_or_add_pPr()
     _remove(pPr, "w:keepLines")
     if on:
         pPr.append(OxmlElement("w:keepLines"))
 
 
-def _cell_shade(cell, fill_hex):
+def _cell_shade(cell, fill_hex: str):
     tcPr = cell._tc.get_or_add_tcPr()
     _remove(tcPr, "w:shd")
     shd = OxmlElement("w:shd")
@@ -160,7 +158,7 @@ def _cell_shade(cell, fill_hex):
     tcPr.append(shd)
 
 
-def _cell_borders(cell, color="000000", size=4):
+def _cell_borders(cell, color: str = "000000", size: int = 4):
     tcPr = cell._tc.get_or_add_tcPr()
     _remove(tcPr, "w:tcBorders")
     borders = OxmlElement("w:tcBorders")
@@ -174,7 +172,7 @@ def _cell_borders(cell, color="000000", size=4):
     tcPr.append(borders)
 
 
-def _cell_margins(cell, top=60, bottom=60, left=80, right=80):
+def _cell_margins(cell, top: int = 60, bottom: int = 60, left: int = 80, right: int = 80):
     tcPr = cell._tc.get_or_add_tcPr()
     _remove(tcPr, "w:tcMar")
     mar = OxmlElement("w:tcMar")
@@ -194,7 +192,7 @@ def _cell_valign(cell, align=WD_ALIGN_VERTICAL.CENTER):
     tcPr.append(va)
 
 
-def _col_width(cell, twips):
+def _col_width(cell, twips: int):
     tcPr = cell._tc.get_or_add_tcPr()
     _remove(tcPr, "w:tcW")
     tcW = OxmlElement("w:tcW")
@@ -203,7 +201,7 @@ def _col_width(cell, twips):
     tcPr.append(tcW)
 
 
-def _row_height(row, twips, exact=False):
+def _row_height(row, twips: int, exact: bool = False):
     trPr = row._tr.get_or_add_trPr()
     _remove(trPr, "w:trHeight")
     trH = OxmlElement("w:trHeight")
@@ -218,7 +216,7 @@ def _no_row_break(row):
     trPr.append(OxmlElement("w:cantSplit"))
 
 
-def _style_cell(cell, shade=WHITE, border_color=BLACK, border_size=4, margins=True):
+def _style_cell(cell, shade: str = WHITE, border_color: str = BLACK, border_size: int = 4, margins: bool = True):
     _cell_shade(cell, shade)
     _cell_borders(cell, color=border_color, size=border_size)
     if margins:
@@ -226,7 +224,7 @@ def _style_cell(cell, shade=WHITE, border_color=BLACK, border_size=4, margins=Tr
     return cell
 
 
-def _new_table(doc, rows, cols, col_widths, total_width):
+def _new_table(doc, rows: int, cols: int, col_widths: list[int], total_width: int):
     tbl = doc.add_table(rows=rows, cols=cols)
     tbl.alignment = WD_TABLE_ALIGNMENT.LEFT
     tbl.style = "Table Grid"
@@ -275,7 +273,7 @@ def _clear_to_single_para(cell):
     return para
 
 
-def _label_para(cell, text, size_pt=LABEL_PT, align=WD_ALIGN_PARAGRAPH.RIGHT):
+def _label_para(cell, text: str, size_pt: float = LABEL_PT, align=WD_ALIGN_PARAGRAPH.RIGHT):
     para = _clear_to_single_para(cell)
     para.alignment = align
     _para_spacing(para, 20, 20)
@@ -288,11 +286,11 @@ def _label_para(cell, text, size_pt=LABEL_PT, align=WD_ALIGN_PARAGRAPH.RIGHT):
 
 def _value_para(
     cell,
-    text,
-    size_pt=BASE_PT,
+    text: str,
+    size_pt: float = BASE_PT,
     align=WD_ALIGN_PARAGRAPH.LEFT,
-    bold=False,
-    multiline=True,
+    bold: bool = False,
+    multiline: bool = True,
 ):
     para = _clear_to_single_para(cell)
     para.alignment = align
@@ -309,7 +307,7 @@ def _value_para(
     return para
 
 
-def _center_bold_para(cell, text, size_pt=BASE_PT, color_hex=BLACK):
+def _center_bold_para(cell, text: str, size_pt: float = BASE_PT, color_hex: str = BLACK):
     para = _clear_to_single_para(cell)
     para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _para_spacing(para, 20, 20)
@@ -317,7 +315,7 @@ def _center_bold_para(cell, text, size_pt=BASE_PT, color_hex=BLACK):
     return para
 
 
-def _section_hdr_para(cell, text, size_pt=BODY_PT):
+def _section_hdr_para(cell, text: str, size_pt: float = BODY_PT):
     para = _clear_to_single_para(cell)
     para.alignment = WD_ALIGN_PARAGRAPH.LEFT
     _para_spacing(para, 20, 20)
@@ -326,7 +324,7 @@ def _section_hdr_para(cell, text, size_pt=BODY_PT):
     return para
 
 
-def _content_para(cell, text="", before=30, after=20, size_pt=BODY_PT, bold_prefix=None, italic_prefix=None):
+def _content_para(cell, text: str = "", before: int = 30, after: int = 20, size_pt: float = BODY_PT, bold_prefix=None, italic_prefix=None):
     para = cell.add_paragraph()
     _para_spacing(para, before, after)
     _keep_lines(para, True)
@@ -342,7 +340,7 @@ def _content_para(cell, text="", before=30, after=20, size_pt=BODY_PT, bold_pref
     return para
 
 
-def _heading_para(cell, text, size_pt=BODY_PT):
+def _heading_para(cell, text: str, size_pt: float = BODY_PT):
     para = cell.add_paragraph()
     _para_spacing(para, 40, 20)
     _keep_with_next(para, True)
@@ -350,13 +348,13 @@ def _heading_para(cell, text, size_pt=BODY_PT):
     return para
 
 
-def _empty_para(cell, before=0, after=0):
+def _empty_para(cell, before: int = 0, after: int = 0):
     para = cell.add_paragraph()
     _para_spacing(para, before, after)
     return para
 
 
-def _bullet_para(cell, text, is_sub=False):
+def _bullet_para(cell, text: str, is_sub: bool = False):
     para = cell.add_paragraph()
     _para_spacing(para, 20, 20)
     pPr = para._p.get_or_add_pPr()
@@ -369,7 +367,7 @@ def _bullet_para(cell, text, is_sub=False):
     return para
 
 
-def _semi_breaks(cell, text, size_pt=BODY_PT):
+def _semi_breaks(cell, text: str, size_pt: float = BODY_PT):
     segments = [s.strip() for s in str(text).split(";") if s.strip()]
     if not segments:
         _content_para(cell, "")
@@ -424,7 +422,7 @@ def _setup_document(doc: Document):
     doc.styles["Normal"].paragraph_format.space_after = Pt(0)
 
 
-def _gap(doc, before=18, after=0):
+def _gap(doc, before: int = 18, after: int = 0):
     p = doc.add_paragraph()
     _para_spacing(p, before, after)
 
@@ -439,12 +437,8 @@ def render_header_banner(doc: Document, logo_path: str | None):
     banner = table.rows[0].cells[0]
     _style_cell(banner, GRAY_BANNER)
     _cell_valign(banner, WD_ALIGN_VERTICAL.CENTER)
-
-    # This controls the BOX size.
     _row_height(table.rows[0], 1280, exact=True)
     _no_row_break(table.rows[0])
-
-    # Padding inside the banner so the logo sits centered with breathing room.
     _cell_margins(banner, top=100, bottom=100, left=0, right=0)
 
     banner.text = ""
@@ -480,25 +474,25 @@ def render_metadata_zone(doc: Document, data: dict[str, Any]):
 
     top = _new_table(doc, 11, 4, [CL, CM, CRL, CRV], W)
 
-    def _prep_label(cell, text):
+    def _prep_label(cell, text: str):
         _style_cell(cell, GRAY_LABEL)
         _cell_valign(cell, WD_ALIGN_VERTICAL.CENTER)
         _cell_margins(cell, top=35, bottom=35, left=60, right=60)
         _label_para(cell, text)
 
-    def _prep_value(cell, text, align=WD_ALIGN_PARAGRAPH.LEFT):
+    def _prep_value(cell, text: str, align=WD_ALIGN_PARAGRAPH.LEFT):
         _style_cell(cell, WHITE)
         _cell_valign(cell, WD_ALIGN_VERTICAL.CENTER)
         _cell_margins(cell, top=35, bottom=35, left=60, right=60)
         _value_para(cell, text, align=align)
 
     row_heights = {
-        0: 300,   # Policy Name - slightly tighter so it tucks under the larger banner
+        0: 300,
         1: 340,
         2: 340,
         3: 420,
         4: 420,
-        5: 620,   # Custodian row expanded
+        5: 620,
         6: 300,
         7: 320,
         8: 320,
@@ -539,12 +533,7 @@ def render_metadata_zone(doc: Document, data: dict[str, Any]):
     _style_cell(merged, WHITE)
     _cell_valign(merged, WD_ALIGN_VERTICAL.CENTER)
     _cell_margins(merged, top=65, bottom=65, left=60, right=60)
-    _value_para(
-        merged,
-        _safe(data.get("custodians")),
-        align=WD_ALIGN_PARAGRAPH.LEFT,
-        multiline=True,
-    )
+    _value_para(merged, _safe(data.get("custodians")), align=WD_ALIGN_PARAGRAPH.LEFT, multiline=True)
 
     left_hdr = top.cell(6, 0).merge(top.cell(6, 1))
     right_hdr = top.cell(6, 2).merge(top.cell(6, 3))
@@ -603,7 +592,6 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
 
     t2 = _new_table(doc, len(rows_def), 3, [LEFT, TEXT, CHECK], W)
 
-    # LEFT PANEL
     left_anchor = t2.rows[0].cells[0]
     for i in range(1, len(rows_def)):
         left_anchor = left_anchor.merge(t2.rows[i].cells[0])
@@ -618,7 +606,6 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
     _para_spacing(lp, 0, 0)
     styled_run(lp, "Applicable To:\n(select all that apply)", bold=True, size_pt=BODY_PT)
 
-    # ROW HEIGHTS
     row_heights = [310, 310, 170, 310, 310, 310, 170, 310, 310]
 
     for i, (label, checked) in enumerate(rows_def):
@@ -630,80 +617,6 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         check_cell = row.cells[2]
         is_header = checked is None
 
-        # ✅ FULL GRAY RIGHT BLOCK
-        _style_cell(text_cell, GRAY_SUBHDR if is_header else GRAY_LABEL)
-        _style_cell(check_cell, GRAY_SUBHDR if is_header else GRAY_LABEL)
-
-        _cell_margins(text_cell, top=20, bottom=20, left=45, right=45)
-        _cell_valign(text_cell, WD_ALIGN_VERTICAL.CENTER)
-        text_cell.text = ""
-
-        tp = text_cell.paragraphs[0]
-        tp.alignment = WD_ALIGN_PARAGRAPH.CENTER if is_header else WD_ALIGN_PARAGRAPH.RIGHT
-        _para_spacing(tp, 0, 0)
-
-        if is_header:
-            styled_run(tp, label, bold=True, size_pt=BASE_PT)
-        else:
-            styled_run(tp, label, size_pt=BASE_PT)
-
-        # CHECKBOX
-        _cell_margins(check_cell, top=0, bottom=0, left=0, right=0)
-        _cell_valign(check_cell, WD_ALIGN_VERTICAL.CENTER)
-        check_cell.text = ""
-
-        cp = check_cell.paragraphs[0]
-        cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        _para_spacing(cp, 0, 0)
-
-        if not is_header:
-            styled_run(cp, _checkbox(checked), size_pt=BASE_PT)
-
-    # Closer to the true HPS geometry
-    LEFT = int(W * 0.47)
-    TEXT = int(W * 0.49)
-    CHECK = W - LEFT - TEXT
-
-    t2 = _new_table(doc, len(rows_def), 3, [LEFT, TEXT, CHECK], W)
-
-    # Merge left panel from top to bottom
-    left_anchor = t2.rows[0].cells[0]
-    for i in range(1, len(rows_def)):
-        left_anchor = left_anchor.merge(t2.rows[i].cells[0])
-
-    _style_cell(left_anchor, GRAY_LABEL)
-    _cell_margins(left_anchor, top=80, bottom=80, left=90, right=90)
-    _cell_valign(left_anchor, WD_ALIGN_VERTICAL.CENTER)
-    left_anchor.text = ""
-
-    lp = left_anchor.paragraphs[0]
-    lp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _para_spacing(lp, 0, 0)
-    styled_run(lp, "Applicable To:\n(select all that apply)", bold=True, size_pt=BODY_PT)
-
-    # Tighter, more template-accurate row rhythm
-    row_heights = [
-        310,  # HPS Inc
-        310,  # HPS Insurance Agency
-        170,  # Policy Types header
-        310,  # Corporate
-        310,  # Government Affairs
-        310,  # Legal Review
-        170,  # LOB header
-        310,  # All LOBs
-        310,  # Specific LOB
-    ]
-
-    for i, (label, checked) in enumerate(rows_def):
-        row = t2.rows[i]
-        _row_height(row, row_heights[i], exact=True)
-        _no_row_break(row)
-
-        text_cell = row.cells[1]
-        check_cell = row.cells[2]
-        is_header = checked is None
-
-        # Text column
         _style_cell(text_cell, GRAY_SUBHDR if is_header else WHITE)
         _cell_margins(text_cell, top=20, bottom=20, left=45, right=45)
         _cell_valign(text_cell, WD_ALIGN_VERTICAL.CENTER)
@@ -712,72 +625,13 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         tp = text_cell.paragraphs[0]
         tp.alignment = WD_ALIGN_PARAGRAPH.CENTER if is_header else WD_ALIGN_PARAGRAPH.RIGHT
         _para_spacing(tp, 0, 0)
-
         if is_header:
             styled_run(tp, label, bold=True, size_pt=BASE_PT)
         else:
             styled_run(tp, label, size_pt=BASE_PT)
 
-        # Checkbox rail
         _style_cell(check_cell, WHITE)
         _cell_margins(check_cell, top=0, bottom=0, left=0, right=0)
-        _cell_valign(check_cell, WD_ALIGN_VERTICAL.CENTER)
-        check_cell.text = ""
-
-        cp = check_cell.paragraphs[0]
-        cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        _para_spacing(cp, 0, 0)
-
-        if not is_header:
-            styled_run(cp, _checkbox(checked), size_pt=BASE_PT)
-    ]
-
-    LEFT = int(W * 0.42)
-    TEXT = int(W * 0.50)
-    CHECK = W - LEFT - TEXT
-
-    t2 = _new_table(doc, len(rows_def), 3, [LEFT, TEXT, CHECK], W)
-
-    left_anchor = t2.rows[0].cells[0]
-    for i in range(1, len(rows_def)):
-        left_anchor = left_anchor.merge(t2.rows[i].cells[0])
-
-    _style_cell(left_anchor, GRAY_LABEL)
-    _cell_margins(left_anchor, top=160, bottom=160, left=120, right=120)
-    _cell_valign(left_anchor, WD_ALIGN_VERTICAL.CENTER)
-    left_anchor.text = ""
-
-    lp = left_anchor.paragraphs[0]
-    lp.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _para_spacing(lp, 0, 0)
-    styled_run(lp, "Applicable To:\n(select all that apply)", bold=True, size_pt=BODY_PT)
-
-    row_heights = [360, 360, 220, 360, 360, 360, 220, 360, 360]
-
-    for i, (label, checked) in enumerate(rows_def):
-        row = t2.rows[i]
-        _row_height(row, row_heights[i], exact=False)
-        _no_row_break(row)
-
-        text_cell = row.cells[1]
-        check_cell = row.cells[2]
-        is_header = checked is None
-
-        _style_cell(text_cell, GRAY_SUBHDR if is_header else WHITE)
-        _cell_margins(text_cell, top=40, bottom=40, left=70, right=70)
-        _cell_valign(text_cell, WD_ALIGN_VERTICAL.CENTER)
-        text_cell.text = ""
-
-        tp = text_cell.paragraphs[0]
-        tp.alignment = WD_ALIGN_PARAGRAPH.CENTER if is_header else WD_ALIGN_PARAGRAPH.RIGHT
-        _para_spacing(tp, 10, 10)
-        if is_header:
-            styled_run(tp, label, bold=True, size_pt=BASE_PT)
-        else:
-            styled_run(tp, label, size_pt=BASE_PT)
-
-        _style_cell(check_cell, WHITE)
-        _cell_margins(check_cell, top=20, bottom=20, left=10, right=10)
         _cell_valign(check_cell, WD_ALIGN_VERTICAL.CENTER)
         check_cell.text = ""
 
@@ -885,11 +739,7 @@ def render_procedures_zone(doc: Document, data: dict[str, Any]):
             elif kind == "sub-bullet":
                 _bullet_para(cell, text, is_sub=True)
             elif kind == "bold_intro":
-                _content_para(
-                    cell,
-                    "",
-                    bold_prefix=(_safe(item.get("bold")), _safe(item.get("rest"))),
-                )
+                _content_para(cell, "", bold_prefix=(_safe(item.get("bold")), _safe(item.get("rest"))))
             elif kind == "bold_intro_semi":
                 para = cell.add_paragraph()
                 _para_spacing(para, 30, 20)
@@ -961,8 +811,7 @@ def render_revision_history_zone(doc: Document, data: dict[str, Any]):
     total_rows = 2 + max(1, len(rev_entries))
     rt = _new_table(doc, total_rows, 4, [RC1, RC2, RC3, RC4], W)
 
-    rh = rt.rows[0].cells[0]
-    rh = rh.merge(rt.rows[0].cells[3])
+    rh = rt.rows[0].cells[0].merge(rt.rows[0].cells[3])
     _style_cell(rh, GRAY_SECTION)
     _cell_margins(rh, top=45, bottom=45, left=80, right=80)
     _section_hdr_para(rh, "Revision History")
@@ -1027,7 +876,7 @@ def render_footer(section, data: dict[str, Any]):
     _para_spacing(fp1, 0, 0)
     styled_run(
         fp1,
-        "Confidential & Proprietary \u00A9 HealthPlan Services Inc., including its subsidiaries and affiliates",
+        "Confidential & Proprietary © HealthPlan Services Inc., including its subsidiaries and affiliates",
         size_pt=SMALL_PT,
         color_hex=FOOTER_GRAY,
     )
@@ -1077,7 +926,6 @@ def build_policy_document(data: dict, output_path: str, logo_path: str | None = 
     _gap(doc)
 
     render_revision_history_zone(doc, data)
-
     render_footer(doc.sections[0], data)
 
     doc.save(output_path)
