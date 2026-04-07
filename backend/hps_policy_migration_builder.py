@@ -1,14 +1,15 @@
 """
 hps_policy_migration_builder.py
 
-HPS Policy Migration Builder — Zone-Based Strict Layout Engine
+HPS Policy Migration Builder — Strict Template Renderer
 
-Goals:
+Design goals:
 - Preserve HPS template fidelity
-- Replace monolithic layout logic with renderer zones
-- Keep fixed-layout / twips-based discipline
-- Leave signature images blank for manual review
-- Preserve rigid matrix structures exactly
+- Keep rigid enterprise matrix structures intact
+- Do not flatten checkbox rails into text
+- Use deterministic fixed-layout tables
+- Keep signature fields blank for review
+- Allow longer metadata values (like custodians) without clipping
 """
 
 from __future__ import annotations
@@ -41,7 +42,7 @@ _CONTENT_W = int(_CONTENT_IN * 1440)             # 10080 twips
 # COLORS / BRAND
 # ──────────────────────────────────────────────────────────────────────────────
 
-GRAY_BANNER = "BFBFBF"
+GRAY_BANNER = "D9D9D9"
 GRAY_LABEL = "D9D9D9"
 GRAY_SUBHDR = "BFBFBF"
 GRAY_SECTION = "D9D9D9"
@@ -61,7 +62,7 @@ BASE_PT = 9.5
 BODY_PT = 10.0
 SMALL_PT = 7.5
 LABEL_PT = 9.0
-BANNER_LOGO_WIDTH_IN = 3.0
+BANNER_LOGO_WIDTH_IN = 3.45
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -95,7 +96,7 @@ def _remove(parent, tag):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# LOW-LEVEL WORD / XML HELPERS
+# LOW-LEVEL XML HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
 
 def styled_run(
@@ -271,10 +272,10 @@ def _clear_to_single_para(cell):
     return para
 
 
-def _label_para(cell, text, size_pt=LABEL_PT):
+def _label_para(cell, text, size_pt=LABEL_PT, align=WD_ALIGN_PARAGRAPH.RIGHT):
     para = _clear_to_single_para(cell)
-    para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    _para_spacing(para, 30, 30)
+    para.alignment = align
+    _para_spacing(para, 20, 20)
     for i, line in enumerate(text.split("\n")):
         if i:
             para.add_run("\n")
@@ -282,18 +283,33 @@ def _label_para(cell, text, size_pt=LABEL_PT):
     return para
 
 
-def _value_para(cell, text, size_pt=BASE_PT, align=WD_ALIGN_PARAGRAPH.LEFT, bold=False):
+def _value_para(
+    cell,
+    text,
+    size_pt=BASE_PT,
+    align=WD_ALIGN_PARAGRAPH.LEFT,
+    bold=False,
+    multiline=True,
+):
     para = _clear_to_single_para(cell)
     para.alignment = align
-    _para_spacing(para, 30, 30)
-    styled_run(para, text or "", size_pt=size_pt, bold=bold)
+    _para_spacing(para, 20, 20)
+
+    value = text or ""
+    if multiline and "\n" in value:
+        for i, line in enumerate(value.split("\n")):
+            if i:
+                para.add_run("\n")
+            styled_run(para, line, size_pt=size_pt, bold=bold)
+    else:
+        styled_run(para, value, size_pt=size_pt, bold=bold)
     return para
 
 
 def _center_bold_para(cell, text, size_pt=BASE_PT, color_hex=BLACK):
     para = _clear_to_single_para(cell)
     para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _para_spacing(para, 40, 40)
+    _para_spacing(para, 20, 20)
     styled_run(para, text, bold=True, size_pt=size_pt, color_hex=color_hex)
     return para
 
@@ -301,13 +317,13 @@ def _center_bold_para(cell, text, size_pt=BASE_PT, color_hex=BLACK):
 def _section_hdr_para(cell, text, size_pt=BODY_PT):
     para = _clear_to_single_para(cell)
     para.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    _para_spacing(para, 30, 30)
+    _para_spacing(para, 20, 20)
     _keep_with_next(para, True)
     styled_run(para, text, bold=True, size_pt=size_pt)
     return para
 
 
-def _content_para(cell, text="", before=40, after=30, size_pt=BODY_PT, bold_prefix=None, italic_prefix=None):
+def _content_para(cell, text="", before=30, after=20, size_pt=BODY_PT, bold_prefix=None, italic_prefix=None):
     para = cell.add_paragraph()
     _para_spacing(para, before, after)
     _keep_lines(para, True)
@@ -325,7 +341,7 @@ def _content_para(cell, text="", before=40, after=30, size_pt=BODY_PT, bold_pref
 
 def _heading_para(cell, text, size_pt=BODY_PT):
     para = cell.add_paragraph()
-    _para_spacing(para, 60, 30)
+    _para_spacing(para, 40, 20)
     _keep_with_next(para, True)
     styled_run(para, text, bold=True, underline=True, size_pt=size_pt)
     return para
@@ -339,7 +355,7 @@ def _empty_para(cell, before=0, after=0):
 
 def _bullet_para(cell, text, is_sub=False):
     para = cell.add_paragraph()
-    _para_spacing(para, 30, 30)
+    _para_spacing(para, 20, 20)
     pPr = para._p.get_or_add_pPr()
     ind = OxmlElement("w:ind")
     ind.set(qn("w:left"), str(900 if is_sub else 540))
@@ -359,7 +375,7 @@ def _semi_breaks(cell, text, size_pt=BODY_PT):
     for i, seg in enumerate(segments):
         suffix = ";" if i < len(segments) - 1 else ""
         para = cell.add_paragraph()
-        _para_spacing(para, 30, 30)
+        _para_spacing(para, 20, 20)
         styled_run(para, seg + suffix, size_pt=size_pt)
 
 
@@ -368,7 +384,7 @@ def _checkbox(checked: bool) -> str:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# REVISION HISTORY NORMALIZER
+# NORMALIZERS
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _norm_revision(entry):
@@ -405,13 +421,13 @@ def _setup_document(doc: Document):
     doc.styles["Normal"].paragraph_format.space_after = Pt(0)
 
 
-def _gap(doc, before=36, after=0):
+def _gap(doc, before=24, after=0):
     p = doc.add_paragraph()
     _para_spacing(p, before, after)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# ZONE 1 — HEADER BANNER
+# ZONE 1 — HEADER
 # ──────────────────────────────────────────────────────────────────────────────
 
 def render_header_banner(doc: Document, logo_path: str | None):
@@ -419,15 +435,15 @@ def render_header_banner(doc: Document, logo_path: str | None):
 
     banner = table.rows[0].cells[0]
     _style_cell(banner, GRAY_BANNER)
-    _cell_margins(banner, top=20, bottom=20, left=20, right=20)
+    _cell_margins(banner, top=0, bottom=0, left=0, right=0)
     _cell_valign(banner, WD_ALIGN_VERTICAL.CENTER)
-    _row_height(table.rows[0], 780, exact=True)
+    _row_height(table.rows[0], 980, exact=True)
     _no_row_break(table.rows[0])
 
     banner.text = ""
     p = banner.paragraphs[0]
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _para_spacing(p, 0, 0, line=240)
+    _para_spacing(p, 0, 0)
 
     logo_ok = bool(logo_path and os.path.exists(str(logo_path)))
     if logo_ok:
@@ -445,104 +461,127 @@ def render_header_banner(doc: Document, logo_path: str | None):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# ZONE 2 — POLICY METADATA
+# ZONE 2 — METADATA GRID
 # ──────────────────────────────────────────────────────────────────────────────
 
 def render_metadata_zone(doc: Document, data: dict[str, Any]):
     W = _CONTENT_W
     CL = int(W * 0.18)
-    CM = int(W * 0.32)
+    CM = int(W * 0.33)
     CRL = int(W * 0.18)
     CRV = W - CL - CM - CRL
 
-    top = _new_table(doc, 12, 4, [CL, CM, CRL, CRV], W)
+    top = _new_table(doc, 11, 4, [CL, CM, CRL, CRV], W)
 
-    def meta(row_idx, left_label, left_value, right_label=None, right_value=None, merge_right=False):
-        row = top.rows[row_idx]
-        c0, c1, c2, c3 = row.cells
+    def _prep_label(cell, text):
+        _style_cell(cell, GRAY_LABEL)
+        _cell_valign(cell, WD_ALIGN_VERTICAL.CENTER)
+        _cell_margins(cell, top=35, bottom=35, left=60, right=60)
+        _label_para(cell, text)
 
-        _style_cell(c0, GRAY_LABEL)
-        _col_width(c0, CL)
-        _label_para(c0, left_label)
+    def _prep_value(cell, text, align=WD_ALIGN_PARAGRAPH.LEFT):
+        _style_cell(cell, WHITE)
+        _cell_valign(cell, WD_ALIGN_VERTICAL.CENTER)
+        _cell_margins(cell, top=35, bottom=35, left=60, right=60)
+        _value_para(cell, text, align=align)
 
-        if merge_right:
-            c1 = c1.merge(c3)
-            _style_cell(c1, WHITE)
-            _col_width(c1, CM + CRL + CRV)
-            _value_para(c1, left_value)
-        else:
-            _style_cell(c1, WHITE)
-            _col_width(c1, CM)
-            _value_para(c1, left_value)
+    row_heights = {
+        0: 360,   # Policy Name
+        1: 360,   # Policy Number / Version
+        2: 360,   # GRC ID Number row
+        3: 430,   # Supersedes / Effective
+        4: 430,   # Last reviewed / revised
+        5: 520,   # Custodian row - deliberately taller
+        6: 300,   # owner/approver header
+        7: 320,   # name
+        8: 320,   # title
+        9: 700,   # signature
+        10: 320,  # dates
+    }
 
-            _style_cell(c2, GRAY_LABEL)
-            _col_width(c2, CRL)
-            _label_para(c2, right_label or "")
+    for idx, twips in row_heights.items():
+        _row_height(top.rows[idx], twips, exact=False)
+        _no_row_break(top.rows[idx])
 
-            _style_cell(c3, WHITE)
-            _col_width(c3, CRV)
-            _value_para(c3, right_value or "")
+    # Row 0
+    _prep_label(top.cell(0, 0), "Policy Name")
+    merged = top.cell(0, 1).merge(top.cell(0, 3))
+    _prep_value(merged, _safe(data.get("policy_name")))
 
-        _no_row_break(row)
+    # Row 1
+    _prep_label(top.cell(1, 0), "Policy Number")
+    _prep_value(top.cell(1, 1), _safe(data.get("policy_number")))
+    _prep_label(top.cell(1, 2), "Version Number")
+    _prep_value(top.cell(1, 3), _safe(data.get("version")))
 
-    meta(0, "Policy Name", _safe(data.get("policy_name")), merge_right=True)
-    meta(1, "Policy Number", _safe(data.get("policy_number")), "Version Number", _safe(data.get("version")))
+    # Row 2
+    _prep_label(top.cell(2, 0), "")
+    _prep_value(top.cell(2, 1), "")
+    _prep_label(top.cell(2, 2), "GRC ID Number")
+    _prep_value(top.cell(2, 3), _safe(data.get("grc_id")))
 
-    r2 = top.rows[2]
-    for i, (shade, w) in enumerate([(GRAY_LABEL, CL), (WHITE, CM), (GRAY_LABEL, CRL), (WHITE, CRV)]):
-        _style_cell(r2.cells[i], shade)
-        _col_width(r2.cells[i], w)
-    r2.cells[0].text = ""
-    r2.cells[1].text = ""
-    _label_para(r2.cells[2], "GRC ID Number")
-    _value_para(r2.cells[3], _safe(data.get("grc_id")))
-    _no_row_break(r2)
+    # Row 3
+    _prep_label(top.cell(3, 0), "Supersedes Policy")
+    _prep_value(top.cell(3, 1), _safe(data.get("supersedes")))
+    _prep_label(top.cell(3, 2), "Effective Date")
+    _prep_value(top.cell(3, 3), _safe(data.get("effective_date")))
 
-    meta(3, "Supersedes Policy", _safe(data.get("supersedes")), "Effective Date", _safe(data.get("effective_date")))
-    meta(4, "Last Reviewed Date", _safe(data.get("last_reviewed")), "Last Revised Date", _safe(data.get("last_revised")))
-    meta(5, "Policy Custodian\nName(s)", _safe(data.get("custodians")), merge_right=True)
+    # Row 4
+    _prep_label(top.cell(4, 0), "Last Reviewed\nDate")
+    _prep_value(top.cell(4, 1), _safe(data.get("last_reviewed")))
+    _prep_label(top.cell(4, 2), "Last Revised Date")
+    _prep_value(top.cell(4, 3), _safe(data.get("last_revised")))
 
-    r6 = top.rows[6]
-    r6.cells[0].merge(r6.cells[1])
-    r6.cells[2].merge(r6.cells[3])
-    _style_cell(r6.cells[0], GRAY_SUBHDR)
-    _style_cell(r6.cells[2], GRAY_SUBHDR)
-    _center_bold_para(r6.cells[0], "Policy Owner")
-    _center_bold_para(r6.cells[2], "Policy Approver")
-    _no_row_break(r6)
+    # Row 5 - custodian, merged and allowed to breathe
+    _prep_label(top.cell(5, 0), "Policy Custodian\nName(s)")
+    merged = top.cell(5, 1).merge(top.cell(5, 3))
+    _style_cell(merged, WHITE)
+    _cell_valign(merged, WD_ALIGN_VERTICAL.CENTER)
+    _cell_margins(merged, top=55, bottom=55, left=60, right=60)
+    _value_para(
+        merged,
+        _safe(data.get("custodians")),
+        align=WD_ALIGN_PARAGRAPH.LEFT,
+        multiline=True,
+    )
 
-    meta(7, "Name", _safe(data.get("owner_name")), "Name", _safe(data.get("approver_name")))
-    meta(8, "Title", _safe(data.get("owner_title")), "Title", _safe(data.get("approver_title")))
+    # Row 6 - owner/approver header
+    left_hdr = top.cell(6, 0).merge(top.cell(6, 1))
+    right_hdr = top.cell(6, 2).merge(top.cell(6, 3))
+    _style_cell(left_hdr, GRAY_SUBHDR)
+    _style_cell(right_hdr, GRAY_SUBHDR)
+    _cell_valign(left_hdr, WD_ALIGN_VERTICAL.CENTER)
+    _cell_valign(right_hdr, WD_ALIGN_VERTICAL.CENTER)
+    _center_bold_para(left_hdr, "Policy Owner")
+    _center_bold_para(right_hdr, "Policy Approver")
 
-    r9 = top.rows[9]
-    for i, (shade, w, label) in enumerate([
-        (GRAY_LABEL, CL, "Signature"),
-        (WHITE, CM, None),
-        (GRAY_LABEL, CRL, "Signature"),
-        (WHITE, CRV, None),
-    ]):
-        c = r9.cells[i]
-        _style_cell(c, shade)
-        _col_width(c, w)
-        if label:
-            _label_para(c, label)
-        else:
-            c.text = ""
-    _row_height(r9, 500)
-    _no_row_break(r9)
+    # Row 7
+    _prep_label(top.cell(7, 0), "Name")
+    _prep_value(top.cell(7, 1), _safe(data.get("owner_name")))
+    _prep_label(top.cell(7, 2), "Name")
+    _prep_value(top.cell(7, 3), _safe(data.get("approver_name")))
 
-    meta(10, "Date Signed", _safe(data.get("date_signed")), "Date Approved", _safe(data.get("date_approved")))
+    # Row 8
+    _prep_label(top.cell(8, 0), "Title")
+    _prep_value(top.cell(8, 1), _safe(data.get("owner_title")))
+    _prep_label(top.cell(8, 2), "Title")
+    _prep_value(top.cell(8, 3), _safe(data.get("approver_title")))
 
-    r11 = top.rows[11]
-    r11.cells[0].merge(r11.cells[3])
-    _style_cell(r11.cells[0], WHITE)
-    _value_para(r11.cells[0], "")
-    _row_height(r11, 120)
-    _no_row_break(r11)
+    # Row 9
+    _prep_label(top.cell(9, 0), "Signature")
+    _prep_value(top.cell(9, 1), "")
+    _prep_label(top.cell(9, 2), "Signature")
+    _prep_value(top.cell(9, 3), "")
+
+    # Row 10
+    _prep_label(top.cell(10, 0), "Date Signed")
+    _prep_value(top.cell(10, 1), _safe(data.get("date_signed")))
+    _prep_label(top.cell(10, 2), "Date Approved")
+    _prep_value(top.cell(10, 3), _safe(data.get("date_approved")))
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# ZONE 3 — APPLICABILITY / TYPE / LOB
+# ZONE 3 — APPLICABILITY / LOB MATRIX
 # ──────────────────────────────────────────────────────────────────────────────
 
 def render_applicability_zone(doc: Document, data: dict[str, Any]):
@@ -562,13 +601,12 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         (f"Specific LOB [{_safe(lob.get('specific_lob')) or 'INSERT HERE'}]", _bool(lob.get("specific_lob_checked"))),
     ]
 
-    LEFT = int(W * 0.48)
-    TEXT = int(W * 0.47)
+    LEFT = int(W * 0.42)
+    TEXT = int(W * 0.50)
     CHECK = W - LEFT - TEXT
 
     t2 = _new_table(doc, len(rows_def), 3, [LEFT, TEXT, CHECK], W)
 
-    # left merged panel
     left_anchor = t2.rows[0].cells[0]
     for i in range(1, len(rows_def)):
         left_anchor = left_anchor.merge(t2.rows[i].cells[0])
@@ -588,12 +626,12 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
     for i, (label, checked) in enumerate(rows_def):
         row = t2.rows[i]
         _row_height(row, row_heights[i], exact=False)
+        _no_row_break(row)
 
         text_cell = row.cells[1]
         check_cell = row.cells[2]
         is_header = checked is None
 
-        # text column
         _style_cell(text_cell, GRAY_SUBHDR if is_header else WHITE)
         _cell_margins(text_cell, top=40, bottom=40, left=70, right=70)
         _cell_valign(text_cell, WD_ALIGN_VERTICAL.CENTER)
@@ -602,13 +640,11 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         tp = text_cell.paragraphs[0]
         tp.alignment = WD_ALIGN_PARAGRAPH.CENTER if is_header else WD_ALIGN_PARAGRAPH.RIGHT
         _para_spacing(tp, 10, 10)
-
         if is_header:
             styled_run(tp, label, bold=True, size_pt=BASE_PT)
         else:
             styled_run(tp, label, size_pt=BASE_PT)
 
-        # checkbox column
         _style_cell(check_cell, WHITE)
         _cell_margins(check_cell, top=20, bottom=20, left=10, right=10)
         _cell_valign(check_cell, WD_ALIGN_VERTICAL.CENTER)
@@ -617,11 +653,8 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         cp = check_cell.paragraphs[0]
         cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
         _para_spacing(cp, 0, 0)
-
         if not is_header:
             styled_run(cp, _checkbox(checked), size_pt=BASE_PT)
-
-        _no_row_break(row)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -646,7 +679,7 @@ def render_section_box(doc: Document, heading: str, fill_fn):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# ZONE 5 — INDIVIDUAL CONTENT RENDERERS
+# CONTENT ZONES
 # ──────────────────────────────────────────────────────────────────────────────
 
 def render_purpose_zone(doc: Document, data: dict[str, Any]):
@@ -673,7 +706,7 @@ def render_definitions_zone(doc: Document, data: dict[str, Any]):
             return
         for term, definition in defs.items():
             para = cell.add_paragraph()
-            _para_spacing(para, 30, 30)
+            _para_spacing(para, 20, 20)
             styled_run(para, "\u2013  ", size_pt=BODY_PT)
             styled_run(para, f"{term}:  ", bold=True, size_pt=BODY_PT)
             styled_run(para, str(definition), size_pt=BODY_PT)
@@ -685,7 +718,7 @@ def render_policy_statement_zone(doc: Document, data: dict[str, Any]):
     def fill(cell):
         stmt = _safe(data.get("policy_statement"))
         para = cell.add_paragraph()
-        _para_spacing(para, 40, 40)
+        _para_spacing(para, 30, 30)
         lower = stmt.lower()
         idx = lower.find(" that ") + len(" that ") if " that " in lower else 0
         if idx:
@@ -728,7 +761,7 @@ def render_procedures_zone(doc: Document, data: dict[str, Any]):
                 )
             elif kind == "bold_intro_semi":
                 para = cell.add_paragraph()
-                _para_spacing(para, 40, 30)
+                _para_spacing(para, 30, 20)
                 styled_run(para, _safe(item.get("bold")), bold=True, size_pt=BODY_PT)
                 segments = [s.strip() for s in _safe(item.get("rest")).split(";") if s.strip()]
                 for i, seg in enumerate(segments):
@@ -737,7 +770,7 @@ def render_procedures_zone(doc: Document, data: dict[str, Any]):
                         styled_run(para, seg + suffix, size_pt=BODY_PT)
                     else:
                         p2 = cell.add_paragraph()
-                        _para_spacing(p2, 0, 30)
+                        _para_spacing(p2, 0, 20)
                         styled_run(p2, seg + suffix, size_pt=BODY_PT)
             else:
                 if ";" in text:
@@ -777,7 +810,7 @@ def render_citations_zone(doc: Document, data: dict[str, Any]):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# ZONE 6 — REVISION HISTORY
+# REVISION HISTORY
 # ──────────────────────────────────────────────────────────────────────────────
 
 def render_revision_history_zone(doc: Document, data: dict[str, Any]):
@@ -836,7 +869,7 @@ def render_revision_history_zone(doc: Document, data: dict[str, Any]):
             lines = str(txt).split("\n")
             for li, line in enumerate(lines):
                 para = rc.paragraphs[0] if li == 0 else rc.add_paragraph()
-                _para_spacing(para, 20, 20)
+                _para_spacing(para, 15, 15)
                 styled_run(para, line.strip(), size_pt=LABEL_PT)
 
 
@@ -890,6 +923,7 @@ def build_policy_document(data: dict, output_path: str, logo_path: str | None = 
     render_header_banner(doc, logo_path)
     render_metadata_zone(doc, data)
     _gap(doc)
+
     render_applicability_zone(doc, data)
     _gap(doc)
 
