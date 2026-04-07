@@ -955,6 +955,11 @@ def build_output_doc(
     policy_data: dict[str, Any],
     logo_path: str | None = None,
 ) -> tuple[str, bytes]:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    if not logo_path:
+        logo_path = os.path.join(BASE_DIR, "assets", "hps_logo.png")
+
     name = _clean_scalar(policy_data.get("policy_name", "Policy")) or "Policy"
     number = _clean_scalar(policy_data.get("policy_number", "POL")) or "POL"
     ver = _clean_scalar(policy_data.get("version", "V1.0")) or "V1.0"
