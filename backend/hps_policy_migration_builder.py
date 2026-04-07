@@ -43,7 +43,7 @@ _CONTENT_W = int(_CONTENT_IN * 1440)             # 10080 twips
 
 GRAY_BANNER = "D9D9D9"
 GRAY_LABEL = "D9D9D9"
-GRAY_SUBHDR = "BFBFBF"
+GRAY_SUBHDR = "A6A6A6"
 GRAY_SECTION = "D9D9D9"
 WHITE = "FFFFFF"
 BLACK = "000000"
@@ -586,8 +586,9 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         (f"Specific LOB [{_safe(lob.get('specific_lob')) or 'INSERT HERE'}]", _bool(lob.get("specific_lob_checked"))),
     ]
 
-    LEFT = int(W * 0.47)
-    TEXT = int(W * 0.49)
+    # Tuned to better align visually with the upper grid and keep the checkbox rail tight.
+    LEFT = int(W * 0.46)
+    TEXT = int(W * 0.48)
     CHECK = W - LEFT - TEXT
 
     t2 = _new_table(doc, len(rows_def), 3, [LEFT, TEXT, CHECK], W)
@@ -597,7 +598,7 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         left_anchor = left_anchor.merge(t2.rows[i].cells[0])
 
     _style_cell(left_anchor, GRAY_LABEL)
-    _cell_margins(left_anchor, top=80, bottom=80, left=90, right=90)
+    _cell_margins(left_anchor, top=60, bottom=60, left=80, right=80)
     _cell_valign(left_anchor, WD_ALIGN_VERTICAL.CENTER)
     left_anchor.text = ""
 
@@ -606,7 +607,7 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
     _para_spacing(lp, 0, 0)
     styled_run(lp, "Applicable To:\n(select all that apply)", bold=True, size_pt=BODY_PT)
 
-    row_heights = [310, 310, 170, 310, 310, 310, 170, 310, 310]
+    row_heights = [280, 280, 160, 280, 280, 280, 160, 280, 280]
 
     for i, (label, checked) in enumerate(rows_def):
         row = t2.rows[i]
@@ -617,8 +618,9 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         check_cell = row.cells[2]
         is_header = checked is None
 
+        # Text column
         _style_cell(text_cell, GRAY_SUBHDR if is_header else WHITE)
-        _cell_margins(text_cell, top=20, bottom=20, left=45, right=45)
+        _cell_margins(text_cell, top=12, bottom=12, left=40, right=40)
         _cell_valign(text_cell, WD_ALIGN_VERTICAL.CENTER)
         text_cell.text = ""
 
@@ -630,7 +632,8 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         else:
             styled_run(tp, label, size_pt=BASE_PT)
 
-        _style_cell(check_cell, WHITE)
+        # Dedicated checkbox rail
+        _style_cell(check_cell, GRAY_SUBHDR if is_header else WHITE)
         _cell_margins(check_cell, top=0, bottom=0, left=0, right=0)
         _cell_valign(check_cell, WD_ALIGN_VERTICAL.CENTER)
         check_cell.text = ""
