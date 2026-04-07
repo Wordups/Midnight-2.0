@@ -12,7 +12,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse, HTMLResponse
 
-from services import (
+from backend.services import (
     get_uploaded_text,
     save_logo_bytes,
     run_llm_transform,
