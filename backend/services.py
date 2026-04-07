@@ -58,7 +58,7 @@ TEMPLATE_REGISTRY = {
 # ── Runtime config ────────────────────────────────────────────────────────────
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL   = "llama-3.3-70b-versatile"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 MIN_TEXT_LEN = 50
 MAX_SOURCE_LEN = 24000
 MAX_POLICY_ANALYSIS_LEN = 16000
@@ -335,6 +335,11 @@ def _groq_call(prompt: str, content: str, max_tokens: int = 8000) -> str:
 
 
 def _sanitize_llm_output(raw: str) -> str:
+    """
+    Sanitize LLM output before JSON parsing.
+    Catches the most common failure modes: smart quotes, null bytes,
+    unicode dashes, and Windows line endings.
+    """
     raw = raw.replace("\r\n", "\n").replace("\r", "\n")
     raw = raw.replace("\x00", "")
     raw = (
@@ -621,17 +626,19 @@ def _policy_to_text(policy_data: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _empty_map(policy_data: dict[str, Any]) -> dict[str, Any]:
+def _empty_map(policy_data: dict[str, Any], reason: str = "Framework mapping unavailable.") -> dict[str, Any]:
     return {
         "policy_name": policy_data.get("policy_name", ""),
         "policy_type": "",
         "overall_coverage": "unknown",
         "mapped_citations": [],
         "gaps": [],
-        "audit_summary": "Framework mapping unavailable for this policy.",
+        "audit_summary": reason,
         "frameworks_covered": [],
         "total_controls_mapped": 0,
         "total_gaps": 0,
+        "_mapping_failed": True,
+        "_mapping_failure_reason": reason,
     }
 
 
@@ -642,7 +649,7 @@ def _parse_framework_map(raw: str, policy_data: dict[str, Any]) -> dict[str, Any
     first = raw.find("{")
     last = raw.rfind("}")
     if first == -1 or last == -1 or last < first:
-        return _empty_map(policy_data)
+        raise ValueError("Framework mapping response did not contain a valid JSON object.")
 
     raw_json = raw[first:last + 1]
 
@@ -650,18 +657,20 @@ def _parse_framework_map(raw: str, policy_data: dict[str, Any]) -> dict[str, Any
         framework_map = json.loads(raw_json)
     except json.JSONDecodeError as e:
         context = _json_error_context(raw_json, e.lineno)
-        print(f"[WARN] Framework JSON parse failed at line {e.lineno}, col {e.colno}\n{context}")
-        return _empty_map(policy_data)
+        raise ValueError(
+            f"Framework JSON parse failed at line {e.lineno}, col {e.colno}.\n\nContext:\n{context}"
+        ) from e
 
     if not isinstance(framework_map, dict):
-        return _empty_map(policy_data)
+        raise ValueError("Framework mapping response was not a JSON object.")
 
     framework_map["policy_name"] = str(
         framework_map.get("policy_name", policy_data.get("policy_name", ""))
-    )
-    framework_map["policy_type"] = str(framework_map.get("policy_type", ""))
+    ).strip()
 
-    coverage = str(framework_map.get("overall_coverage", "unknown")).lower()
+    framework_map["policy_type"] = str(framework_map.get("policy_type", "")).strip()
+
+    coverage = str(framework_map.get("overall_coverage", "unknown")).lower().strip()
     framework_map["overall_coverage"] = (
         coverage if coverage in {"strong", "moderate", "weak", "unknown"} else "unknown"
     )
@@ -675,13 +684,19 @@ def _parse_framework_map(raw: str, policy_data: dict[str, Any]) -> dict[str, Any
     covered = framework_map.get("frameworks_covered", [])
     framework_map["frameworks_covered"] = covered if isinstance(covered, list) else []
 
-    framework_map["audit_summary"] = str(framework_map.get("audit_summary", "") or "")
+    framework_map["audit_summary"] = str(framework_map.get("audit_summary", "") or "").strip()
     framework_map["total_controls_mapped"] = int(
         framework_map.get("total_controls_mapped", len(framework_map["mapped_citations"])) or 0
     )
     framework_map["total_gaps"] = int(
         framework_map.get("total_gaps", len(framework_map["gaps"])) or 0
     )
+
+    if not framework_map["audit_summary"]:
+        raise ValueError("Framework mapping missing audit_summary.")
+
+    framework_map["_mapping_failed"] = False
+    framework_map["_mapping_failure_reason"] = ""
 
     return framework_map
 
@@ -698,17 +713,26 @@ def run_framework_mapping(policy_data: dict[str, Any]) -> dict[str, Any]:
 
     try:
         raw = _groq_call(FRAMEWORK_MAPPING_PROMPT, policy_text, max_tokens=6000)
+
+        print("\n--- RAW FRAMEWORK OUTPUT (START) ---\n")
+        print(raw[:4000])
+        print("\n--- RAW FRAMEWORK OUTPUT (END) ---\n")
+
+        framework_map = _parse_framework_map(raw, policy_data)
+
     except Exception as e:
         print(f"[WARN] Framework mapping failed: {e}")
-        return _empty_map(policy_data)
-
-    framework_map = _parse_framework_map(raw, policy_data)
+        framework_map = _empty_map(
+            policy_data,
+            reason=f"Framework mapping failed: {str(e)}"
+        )
 
     print(
         "FRAMEWORK   |  "
         f"mapped: {framework_map.get('total_controls_mapped', 0)}  "
         f"gaps: {framework_map.get('total_gaps', 0)}  "
-        f"coverage: {framework_map.get('overall_coverage', '?')}\n"
+        f"coverage: {framework_map.get('overall_coverage', '?')}  "
+        f"failed: {framework_map.get('_mapping_failed', False)}\n"
     )
     return framework_map
 
