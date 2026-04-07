@@ -8,7 +8,7 @@ Goals:
 - Replace monolithic layout logic with renderer zones
 - Keep fixed-layout / twips-based discipline
 - Leave signature images blank for manual review
-- Be resilient to ugly source data
+- Preserve rigid matrix structures exactly
 """
 
 from __future__ import annotations
@@ -17,7 +17,6 @@ import os
 from typing import Any
 
 from docx import Document
-from docx.enum.section import WD_SECTION_START
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
@@ -365,7 +364,7 @@ def _semi_breaks(cell, text, size_pt=BODY_PT):
 
 
 def _checkbox(checked: bool) -> str:
-    return "\u2611" if checked else "\u2610"
+    return "\u2612" if checked else "\u2610"
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -534,7 +533,6 @@ def render_metadata_zone(doc: Document, data: dict[str, Any]):
 
     meta(10, "Date Signed", _safe(data.get("date_signed")), "Date Approved", _safe(data.get("date_approved")))
 
-    # buffer row to better match the source template rhythm
     r11 = top.rows[11]
     r11.cells[0].merge(r11.cells[3])
     _style_cell(r11.cells[0], WHITE)
@@ -561,14 +559,16 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
         ("Legal Review Required", _bool(app_to.get("legal_review"))),
         ("Line of Business (LOB)", None),
         ("All LOBs", _bool(lob.get("all_lobs"))),
-        (f"Specific LOB: {_safe(lob.get('specific_lob')) or '[INSERT HERE]'}", _bool(lob.get("specific_lob_checked"))),
+        (f"Specific LOB [{_safe(lob.get('specific_lob')) or 'INSERT HERE'}]", _bool(lob.get("specific_lob_checked"))),
     ]
 
-    AL = int(W * 0.28)
-    AR = W - AL
+    LEFT = int(W * 0.48)
+    TEXT = int(W * 0.47)
+    CHECK = W - LEFT - TEXT
 
-    t2 = _new_table(doc, len(rows_def), 2, [AL, AR], W)
+    t2 = _new_table(doc, len(rows_def), 3, [LEFT, TEXT, CHECK], W)
 
+    # left merged panel
     left_anchor = t2.rows[0].cells[0]
     for i in range(1, len(rows_def)):
         left_anchor = left_anchor.merge(t2.rows[i].cells[0])
@@ -576,32 +576,52 @@ def render_applicability_zone(doc: Document, data: dict[str, Any]):
     _style_cell(left_anchor, GRAY_LABEL)
     _cell_margins(left_anchor, top=160, bottom=160, left=120, right=120)
     _cell_valign(left_anchor, WD_ALIGN_VERTICAL.CENTER)
-
     left_anchor.text = ""
+
     lp = left_anchor.paragraphs[0]
     lp.alignment = WD_ALIGN_PARAGRAPH.CENTER
     _para_spacing(lp, 0, 0)
     styled_run(lp, "Applicable To:\n(select all that apply)", bold=True, size_pt=BODY_PT)
 
+    row_heights = [360, 360, 220, 360, 360, 360, 220, 360, 360]
+
     for i, (label, checked) in enumerate(rows_def):
-        rc = t2.rows[i].cells[1]
-        is_hdr = checked is None
-        _style_cell(rc, GRAY_SUBHDR if is_hdr else WHITE)
-        _cell_margins(rc, top=70, bottom=70, left=90, right=90)
-        _col_width(rc, AR)
-        _cell_valign(rc, WD_ALIGN_VERTICAL.CENTER)
+        row = t2.rows[i]
+        _row_height(row, row_heights[i], exact=False)
 
-        rc.text = ""
-        p = rc.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        _para_spacing(p, 20, 20)
+        text_cell = row.cells[1]
+        check_cell = row.cells[2]
+        is_header = checked is None
 
-        if is_hdr:
-            styled_run(p, label, bold=True, size_pt=BASE_PT)
+        # text column
+        _style_cell(text_cell, GRAY_SUBHDR if is_header else WHITE)
+        _cell_margins(text_cell, top=40, bottom=40, left=70, right=70)
+        _cell_valign(text_cell, WD_ALIGN_VERTICAL.CENTER)
+        text_cell.text = ""
+
+        tp = text_cell.paragraphs[0]
+        tp.alignment = WD_ALIGN_PARAGRAPH.CENTER if is_header else WD_ALIGN_PARAGRAPH.RIGHT
+        _para_spacing(tp, 10, 10)
+
+        if is_header:
+            styled_run(tp, label, bold=True, size_pt=BASE_PT)
         else:
-            styled_run(p, f"{label}  {_checkbox(checked)}", size_pt=BASE_PT)
+            styled_run(tp, label, size_pt=BASE_PT)
 
-        _no_row_break(t2.rows[i])
+        # checkbox column
+        _style_cell(check_cell, WHITE)
+        _cell_margins(check_cell, top=20, bottom=20, left=10, right=10)
+        _cell_valign(check_cell, WD_ALIGN_VERTICAL.CENTER)
+        check_cell.text = ""
+
+        cp = check_cell.paragraphs[0]
+        cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        _para_spacing(cp, 0, 0)
+
+        if not is_header:
+            styled_run(cp, _checkbox(checked), size_pt=BASE_PT)
+
+        _no_row_break(row)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
