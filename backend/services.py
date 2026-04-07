@@ -14,12 +14,12 @@ Pipeline:
 
 from __future__ import annotations
 
-import os
 import io
-import re
 import json
-import uuid
+import os
+import re
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -28,10 +28,8 @@ from groq import Groq
 
 from hps_policy_migration_builder import build_policy_document
 
+
 # ── Template registry ─────────────────────────────────────────────────────────
-# "_generic" → templates/template_generic.py
-# "_hps"     → hps_policy_migration_builder.py  (Enterprise Template A)
-# Add new templates here — nothing else needs to change.
 
 try:
     from templates.template_generic import build_document as _build_generic
@@ -41,27 +39,21 @@ except ImportError:
     _build_generic = None
 
 TEMPLATE_REGISTRY = {
-    # ── Generic ──────────────────────────────────────────────────────────────
-    "Generic Policy Template":    "_generic",
-    "Generic":                    "_generic",
+    "Generic Policy Template": "_generic",
+    "Generic": "_generic",
     "Enterprise Policy Template": "_generic",
-    # ── Enterprise Template A → HPS builder ──────────────────────────────────
-    # Renamed for client confidentiality. Routes to hps_policy_migration_builder.
-    "Enterprise Template A":      "_hps",
-    # ── Future templates ─────────────────────────────────────────────────────
-    # "Healthcare":  "_healthcare",
-    # "Finance":     "_finance",
-    # "Tech":        "_tech",
-    # "Legal":       "_legal",
+    "Enterprise Template A": "_hps",
 }
+
 
 # ── Runtime config ────────────────────────────────────────────────────────────
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 MIN_TEXT_LEN = 50
 MAX_SOURCE_LEN = 24000
 MAX_POLICY_ANALYSIS_LEN = 16000
+
 
 # ── Prompts ───────────────────────────────────────────────────────────────────
 
@@ -249,17 +241,97 @@ Return ONLY valid JSON.
 HERE IS THE POLICY TO ANALYZE:
 """
 
+
+# ── Generic text sanitation ───────────────────────────────────────────────────
+
+def _remove_illegal_control_chars(text: str, preserve_newlines: bool = True) -> str:
+    if not text:
+        return ""
+
+    allowed = "\n\t" if preserve_newlines else ""
+    bad_controls = "".join(chr(i) for i in range(32) if chr(i) not in allowed)
+    return text.translate(str.maketrans("", "", bad_controls))
+
+
+def _normalize_unicode_punctuation(text: str) -> str:
+    if not text:
+        return ""
+
+    replacements = {
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2022": "•",
+        "\u25e6": "◦",
+        "\u00a0": " ",
+        "\u200b": "",
+        "\ufeff": "",
+        "\u2028": " ",
+        "\u2029": " ",
+    }
+    for src, dst in replacements.items():
+        text = text.replace(src, dst)
+    return text
+
+
+def _clean_text(text: str, preserve_newlines: bool = True) -> str:
+    if text is None:
+        return ""
+
+    text = str(text)
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = _remove_illegal_control_chars(text, preserve_newlines=preserve_newlines)
+    text = _normalize_unicode_punctuation(text)
+
+    if preserve_newlines:
+        text = re.sub(r"[ \t]+", " ", text)
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        text = "\n".join(line.strip() for line in text.splitlines())
+    else:
+        text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
+
+
+def _clean_scalar(value: Any) -> str:
+    return _clean_text(str(value or ""), preserve_newlines=False)
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        if value in (None, "", False):
+            return default
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _dedupe_preserve_order(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for item in items:
+        cleaned = _clean_scalar(item)
+        if cleaned and cleaned not in seen:
+            seen.add(cleaned)
+            result.append(cleaned)
+    return result
+
+
 # ── Extraction helpers ────────────────────────────────────────────────────────
 
 def _extract_docx_bytes(file_bytes: bytes) -> str:
     lines: list[str] = []
+
     try:
         doc = DocxDocument(io.BytesIO(file_bytes))
     except Exception as e:
         raise ValueError(f"Could not open .docx file: {e}")
 
     for para in doc.paragraphs:
-        text = para.text.strip()
+        text = _clean_text(para.text, preserve_newlines=False)
         if text:
             lines.append(text)
 
@@ -268,41 +340,47 @@ def _extract_docx_bytes(file_bytes: bytes) -> str:
             row_parts: list[str] = []
             for cell in row.cells:
                 cell_text = "\n".join(
-                    p.text.strip() for p in cell.paragraphs if p.text.strip()
+                    _clean_text(p.text, preserve_newlines=False)
+                    for p in cell.paragraphs
+                    if _clean_text(p.text, preserve_newlines=False)
                 ).strip()
                 if cell_text:
                     row_parts.append(cell_text)
             if row_parts:
-                seen: list[str] = []
-                for part in row_parts:
-                    if part not in seen:
-                        seen.append(part)
-                lines.append(" | ".join(seen))
+                lines.append(" | ".join(_dedupe_preserve_order(row_parts)))
 
     for section in doc.sections:
-        for hdr_para in section.header.paragraphs:
-            text = hdr_para.text.strip()
-            if text:
-                lines.append(f"[HEADER] {text}")
-        for ftr_para in section.footer.paragraphs:
-            text = ftr_para.text.strip()
-            if text:
-                lines.append(f"[FOOTER] {text}")
+        try:
+            for hdr_para in section.header.paragraphs:
+                text = _clean_text(hdr_para.text, preserve_newlines=False)
+                if text:
+                    lines.append(f"[HEADER] {text}")
+        except Exception:
+            pass
 
-    return "\n".join(lines)
+        try:
+            for ftr_para in section.footer.paragraphs:
+                text = _clean_text(ftr_para.text, preserve_newlines=False)
+                if text:
+                    lines.append(f"[FOOTER] {text}")
+        except Exception:
+            pass
+
+    return _clean_text("\n".join(lines), preserve_newlines=True)
 
 
 def _extract_txt_bytes(file_bytes: bytes) -> str:
     for encoding in ("utf-8", "latin-1", "cp1252"):
         try:
-            return file_bytes.decode(encoding)
+            return _clean_text(file_bytes.decode(encoding), preserve_newlines=True)
         except UnicodeDecodeError:
             continue
-    return file_bytes.decode("utf-8", errors="replace")
+    return _clean_text(file_bytes.decode("utf-8", errors="replace"), preserve_newlines=True)
 
 
 def get_uploaded_text(filename: str, file_bytes: bytes) -> str:
     name = filename.lower().strip()
+
     if name.endswith(".docx"):
         text = _extract_docx_bytes(file_bytes)
     elif name.endswith((".txt", ".md")):
@@ -313,7 +391,8 @@ def get_uploaded_text(filename: str, file_bytes: bytes) -> str:
         except Exception:
             text = _extract_txt_bytes(file_bytes)
 
-    text = text.strip()
+    text = _clean_text(text, preserve_newlines=True)
+
     print(f"\n{'=' * 60}\nEXTRACTION  |  {filename}  |  {len(text)} chars\n{'=' * 60}\n")
     return text
 
@@ -331,32 +410,26 @@ def _groq_call(prompt: str, content: str, max_tokens: int = 8000) -> str:
         temperature=0.1,
         max_tokens=max_tokens,
     )
-    return (response.choices[0].message.content or "").strip()
+
+    return _clean_text(response.choices[0].message.content or "", preserve_newlines=True)
 
 
 def _sanitize_llm_output(raw: str) -> str:
     """
     Sanitize LLM output before JSON parsing.
-    Catches the most common failure modes: smart quotes, null bytes,
-    unicode dashes, and Windows line endings.
+    This is the critical hardening point for malformed control characters,
+    smart punctuation, zero-width chars, and broken line endings.
     """
-    raw = raw.replace("\r\n", "\n").replace("\r", "\n")
-    raw = raw.replace("\x00", "")
-    raw = (
-        raw
-        .replace("\u201c", '"').replace("\u201d", '"')
-        .replace("\u2018", "'").replace("\u2019", "'")
-    )
-    raw = raw.replace("\u2013", "-").replace("\u2014", "-")
-    raw = raw.replace("\u200b", "").replace("\ufeff", "")
-    return raw
+    return _clean_text(raw, preserve_newlines=True)
 
 
 def _strip_code_fences(raw: str) -> str:
     raw = raw.strip()
+
     if raw.startswith("```"):
         raw = re.sub(r"^```(?:json|python)?\s*", "", raw, flags=re.IGNORECASE)
         raw = re.sub(r"\s*```$", "", raw)
+
     return raw.strip()
 
 
@@ -371,19 +444,23 @@ def _extract_json_object(raw: str) -> str:
 
     first = raw.find("{")
     last = raw.rfind("}")
+
     if first == -1 or last == -1 or last < first:
         raise ValueError("Model response did not contain a JSON object.")
 
-    return raw[first:last + 1]
+    raw_json = raw[first:last + 1]
+    return _sanitize_llm_output(raw_json)
 
 
 def _json_error_context(raw: str, lineno: int | None, window: int = 6) -> str:
     lines = raw.splitlines()
     if not lines:
         return raw[:600]
+
     line_no = lineno or 1
     start = max(0, line_no - window - 1)
     end = min(len(lines), line_no + window)
+
     return "\n".join(f"{i + 1}: {lines[i]}" for i in range(start, end))
 
 
@@ -392,83 +469,129 @@ def _repair_json_via_llm(raw_json: str) -> str:
     return _extract_json_object(repaired)
 
 
+def _attempt_json_parse(raw_json: str) -> dict[str, Any]:
+    return json.loads(raw_json)
+
+
+# ── Normalizers ───────────────────────────────────────────────────────────────
+
 def _normalize_revision_history(value: Any) -> list[dict[str, str]]:
     if not value:
         return []
+
     out: list[dict[str, str]] = []
+
     if isinstance(value, list):
         for entry in value:
             if isinstance(entry, dict):
                 out.append({
-                    "date": str(entry.get("date", "")).strip(),
-                    "version": str(entry.get("version", "")).strip(),
-                    "updated_by": str(entry.get("updated_by", "")).strip(),
-                    "description": str(entry.get("description", "")).strip(),
+                    "date": _clean_scalar(entry.get("date", "")),
+                    "version": _clean_scalar(entry.get("version", "")),
+                    "updated_by": _clean_scalar(entry.get("updated_by", "")),
+                    "description": _clean_scalar(entry.get("description", "")),
                 })
             elif isinstance(entry, (list, tuple)):
                 padded = list(entry) + ["", "", "", ""]
                 out.append({
-                    "date": str(padded[0]).strip(),
-                    "version": str(padded[1]).strip(),
-                    "updated_by": str(padded[2]).strip(),
-                    "description": str(padded[3]).strip(),
+                    "date": _clean_scalar(padded[0]),
+                    "version": _clean_scalar(padded[1]),
+                    "updated_by": _clean_scalar(padded[2]),
+                    "description": _clean_scalar(padded[3]),
                 })
             else:
                 out.append({
                     "date": "",
                     "version": "",
                     "updated_by": "",
-                    "description": str(entry).strip(),
+                    "description": _clean_scalar(entry),
                 })
+
     return out
 
 
 def _normalize_procedures(value: Any) -> list[dict[str, Any]]:
     allowed = {
-        "para", "heading", "bullet", "sub-bullet",
-        "bold_intro", "bold_intro_semi", "empty",
+        "para",
+        "heading",
+        "bullet",
+        "sub-bullet",
+        "bold_intro",
+        "bold_intro_semi",
+        "empty",
     }
+
     if not isinstance(value, list):
         return []
 
     normalized: list[dict[str, Any]] = []
+
     for item in value:
         if isinstance(item, str):
-            normalized.append({"type": "para", "text": item.strip()})
+            text = _clean_scalar(item)
+            if text:
+                normalized.append({"type": "para", "text": text})
             continue
+
         if not isinstance(item, dict):
             continue
 
-        kind = str(item.get("type", "para")).strip()
+        kind = _clean_scalar(item.get("type", "para")).lower()
         if kind not in allowed:
             kind = "para"
 
         if kind in {"bold_intro", "bold_intro_semi"}:
             normalized.append({
                 "type": kind,
-                "bold": str(item.get("bold", "")).strip(),
-                "rest": str(item.get("rest", "")).strip(),
+                "bold": _clean_scalar(item.get("bold", "")),
+                "rest": _clean_scalar(item.get("rest", "")),
             })
         elif kind == "empty":
             normalized.append({"type": "empty"})
         else:
-            normalized.append({
-                "type": kind,
-                "text": str(item.get("text", "")).strip(),
-            })
+            text = _clean_scalar(item.get("text", ""))
+            if text:
+                normalized.append({
+                    "type": kind,
+                    "text": text,
+                })
+
     return normalized
 
 
 def _coerce_bool(value: Any, default: bool = False) -> bool:
     if isinstance(value, bool):
         return value
+
     if isinstance(value, str):
         v = value.strip().lower()
         if v in {"true", "yes", "y", "1", "checked", "x"}:
             return True
         if v in {"false", "no", "n", "0", "unchecked"}:
             return False
+
+    if isinstance(value, int):
+        return bool(value)
+
     return default
+
+
+def _normalize_string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return _dedupe_preserve_order([str(x) for x in value if _clean_scalar(x)])
+
+
+def _normalize_definitions(value: Any) -> dict[str, str]:
+    if not isinstance(value, dict):
+        return {}
+
+    out: dict[str, str] = {}
+    for k, v in value.items():
+        key = _clean_scalar(k)
+        val = _clean_scalar(v)
+        if key:
+            out[key] = val
+    return out
 
 
 def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
@@ -476,13 +599,27 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Parsed POLICY_DATA is not a JSON object.")
 
     scalar_fields = [
-        "policy_name", "policy_number", "version", "grc_id", "supersedes",
-        "effective_date", "last_reviewed", "last_revised", "custodians",
-        "owner_name", "owner_title", "approver_name", "approver_title",
-        "date_signed", "date_approved", "purpose", "policy_statement",
+        "policy_name",
+        "policy_number",
+        "version",
+        "grc_id",
+        "supersedes",
+        "effective_date",
+        "last_reviewed",
+        "last_revised",
+        "custodians",
+        "owner_name",
+        "owner_title",
+        "approver_name",
+        "approver_title",
+        "date_signed",
+        "date_approved",
+        "purpose",
+        "policy_statement",
     ]
+
     for key in scalar_fields:
-        data[key] = str(data.get(key, "") or "").strip()
+        data[key] = _clean_scalar(data.get(key, ""))
 
     app = data.get("applicable_to", {}) if isinstance(data.get("applicable_to"), dict) else {}
     data["applicable_to"] = {
@@ -504,26 +641,13 @@ def _validate_policy_data(data: dict[str, Any]) -> dict[str, Any]:
     lob = data.get("line_of_business", {}) if isinstance(data.get("line_of_business"), dict) else {}
     data["line_of_business"] = {
         "all_lobs": _coerce_bool(lob.get("all_lobs"), True),
-        "specific_lob": str(lob.get("specific_lob", "") or "").strip(),
+        "specific_lob": _clean_scalar(lob.get("specific_lob", "")),
         "specific_lob_checked": _coerce_bool(lob.get("specific_lob_checked"), False),
     }
 
-    defs = data.get("definitions", {})
-    if isinstance(defs, dict):
-        data["definitions"] = {
-            str(k).strip(): str(v).strip()
-            for k, v in defs.items() if str(k).strip()
-        }
-    else:
-        data["definitions"] = {}
-
-    for key in ("related_policies", "citations"):
-        value = data.get(key, [])
-        if isinstance(value, list):
-            data[key] = [str(x).strip() for x in value if str(x).strip()]
-        else:
-            data[key] = []
-
+    data["definitions"] = _normalize_definitions(data.get("definitions", {}))
+    data["related_policies"] = _normalize_string_list(data.get("related_policies", []))
+    data["citations"] = _normalize_string_list(data.get("citations", []))
     data["procedures"] = _normalize_procedures(data.get("procedures", []))
     data["revision_history"] = _normalize_revision_history(data.get("revision_history", []))
 
@@ -539,41 +663,50 @@ def _parse_policy_data(raw: str) -> dict[str, Any]:
     raw_json = _extract_json_object(raw)
 
     try:
-        parsed = json.loads(raw_json)
+        parsed = _attempt_json_parse(raw_json)
     except json.JSONDecodeError as e:
         print(f"[WARN] Initial POLICY_DATA JSON parse failed at line {e.lineno}, col {e.colno}")
         print(_json_error_context(raw_json, e.lineno))
 
+        # First retry after an additional sanitize pass
         try:
-            repaired_json = _repair_json_via_llm(raw_json)
-            parsed = json.loads(repaired_json)
-            print("[INFO] POLICY_DATA repaired successfully by secondary JSON repair pass.")
-        except Exception as repair_error:
-            context = _json_error_context(raw_json, e.lineno)
-            raise ValueError(
-                f"JSON parsing failed at line {e.lineno}, column {e.colno}.\n\n"
-                f"Context:\n{context}\n\n"
-                f"Original error: {e}\n\n"
-                f"Repair attempt failed: {repair_error}"
-            )
+            raw_json_retry = _sanitize_llm_output(raw_json)
+            parsed = _attempt_json_parse(raw_json_retry)
+            print("[INFO] POLICY_DATA parsed successfully after secondary sanitization pass.")
+        except Exception:
+            # Final retry via LLM JSON repair
+            try:
+                repaired_json = _repair_json_via_llm(raw_json)
+                parsed = _attempt_json_parse(repaired_json)
+                print("[INFO] POLICY_DATA repaired successfully by secondary JSON repair pass.")
+            except Exception as repair_error:
+                context = _json_error_context(raw_json, e.lineno)
+                raise ValueError(
+                    f"JSON parsing failed at line {e.lineno}, column {e.colno}.\n\n"
+                    f"Context:\n{context}\n\n"
+                    f"Original error: {e}\n\n"
+                    f"Repair attempt failed: {repair_error}"
+                ) from repair_error
 
     return _validate_policy_data(parsed)
 
 
 def run_llm_transform(source_text: str, template_name: str) -> dict[str, Any]:
-    source_text = source_text.strip()
+    source_text = _clean_text(source_text, preserve_newlines=True)
+
     if len(source_text) < MIN_TEXT_LEN:
         raise ValueError(f"Extracted text too short ({len(source_text)} chars).")
+
     if len(source_text) > MAX_SOURCE_LEN:
         source_text = source_text[:MAX_SOURCE_LEN]
 
     try:
         raw = _groq_call(EXTRACTION_PROMPT, source_text, max_tokens=8000)
     except Exception as e:
-        raise ValueError(f"Groq extraction failed: {e}")
+        raise ValueError(f"Groq extraction failed: {e}") from e
 
     policy_data = _parse_policy_data(raw)
-    policy_data["template_name"] = template_name
+    policy_data["template_name"] = _clean_scalar(template_name) or "Generic Policy Template"
     return policy_data
 
 
@@ -581,6 +714,7 @@ def run_llm_transform(source_text: str, template_name: str) -> dict[str, Any]:
 
 def _policy_to_text(policy_data: dict[str, Any]) -> str:
     lines: list[str] = []
+
     lines.append(
         f"POLICY: {policy_data.get('policy_name', '')} "
         f"({policy_data.get('policy_number', '')})"
@@ -589,9 +723,14 @@ def _policy_to_text(policy_data: dict[str, Any]) -> str:
     lines.append("")
 
     if policy_data.get("purpose"):
-        lines.append(f"PURPOSE:\n{policy_data['purpose']}\n")
+        lines.append("PURPOSE:")
+        lines.append(policy_data["purpose"])
+        lines.append("")
+
     if policy_data.get("policy_statement"):
-        lines.append(f"POLICY STATEMENT:\n{policy_data['policy_statement']}\n")
+        lines.append("POLICY STATEMENT:")
+        lines.append(policy_data["policy_statement"])
+        lines.append("")
 
     defs = policy_data.get("definitions", {})
     if defs:
@@ -606,15 +745,18 @@ def _policy_to_text(policy_data: dict[str, Any]) -> str:
         for item in procs:
             kind = item.get("type", "")
             if kind == "heading":
-                lines.append(f"\n  [{item.get('text', '')}]")
+                lines.append(f"  [{item.get('text', '')}]")
             elif kind == "bullet":
                 lines.append(f"  • {item.get('text', '')}")
             elif kind == "sub-bullet":
                 lines.append(f"    ◦ {item.get('text', '')}")
             elif kind in ("bold_intro", "bold_intro_semi"):
-                lines.append(f"  {item.get('bold', '')} {item.get('rest', '')}")
+                lines.append(f"  {item.get('bold', '')} {item.get('rest', '')}".strip())
             elif kind == "para":
                 lines.append(f"  {item.get('text', '')}")
+            elif kind == "empty":
+                lines.append("")
+
         lines.append("")
 
     existing = policy_data.get("citations", [])
@@ -623,10 +765,13 @@ def _policy_to_text(policy_data: dict[str, Any]) -> str:
         for c in existing:
             lines.append(f"  {c}")
 
-    return "\n".join(lines)
+    return _clean_text("\n".join(lines), preserve_newlines=True)
 
 
-def _empty_map(policy_data: dict[str, Any], reason: str = "Framework mapping unavailable.") -> dict[str, Any]:
+def _empty_map(
+    policy_data: dict[str, Any],
+    reason: str = "Framework mapping unavailable.",
+) -> dict[str, Any]:
     return {
         "policy_name": policy_data.get("policy_name", ""),
         "policy_type": "",
@@ -642,12 +787,33 @@ def _empty_map(policy_data: dict[str, Any], reason: str = "Framework mapping una
     }
 
 
+def _normalize_framework_entries(value: Any) -> list[dict[str, str]]:
+    if not isinstance(value, list):
+        return []
+
+    out: list[dict[str, str]] = []
+    for entry in value:
+        if not isinstance(entry, dict):
+            continue
+
+        cleaned = {
+            str(k): _clean_scalar(v)
+            for k, v in entry.items()
+            if _clean_scalar(k)
+        }
+        if cleaned:
+            out.append(cleaned)
+
+    return out
+
+
 def _parse_framework_map(raw: str, policy_data: dict[str, Any]) -> dict[str, Any]:
     raw = _sanitize_llm_output(raw)
     raw = _strip_code_fences(raw)
 
     first = raw.find("{")
     last = raw.rfind("}")
+
     if first == -1 or last == -1 or last < first:
         raise ValueError("Framework mapping response did not contain a valid JSON object.")
 
@@ -664,32 +830,32 @@ def _parse_framework_map(raw: str, policy_data: dict[str, Any]) -> dict[str, Any
     if not isinstance(framework_map, dict):
         raise ValueError("Framework mapping response was not a JSON object.")
 
-    framework_map["policy_name"] = str(
+    framework_map["policy_name"] = _clean_scalar(
         framework_map.get("policy_name", policy_data.get("policy_name", ""))
-    ).strip()
+    )
+    framework_map["policy_type"] = _clean_scalar(framework_map.get("policy_type", ""))
 
-    framework_map["policy_type"] = str(framework_map.get("policy_type", "")).strip()
-
-    coverage = str(framework_map.get("overall_coverage", "unknown")).lower().strip()
+    coverage = _clean_scalar(framework_map.get("overall_coverage", "unknown")).lower()
     framework_map["overall_coverage"] = (
         coverage if coverage in {"strong", "moderate", "weak", "unknown"} else "unknown"
     )
 
-    mapped = framework_map.get("mapped_citations", [])
-    framework_map["mapped_citations"] = mapped if isinstance(mapped, list) else []
-
-    gaps = framework_map.get("gaps", [])
-    framework_map["gaps"] = gaps if isinstance(gaps, list) else []
-
-    covered = framework_map.get("frameworks_covered", [])
-    framework_map["frameworks_covered"] = covered if isinstance(covered, list) else []
-
-    framework_map["audit_summary"] = str(framework_map.get("audit_summary", "") or "").strip()
-    framework_map["total_controls_mapped"] = int(
-        framework_map.get("total_controls_mapped", len(framework_map["mapped_citations"])) or 0
+    framework_map["mapped_citations"] = _normalize_framework_entries(
+        framework_map.get("mapped_citations", [])
     )
-    framework_map["total_gaps"] = int(
-        framework_map.get("total_gaps", len(framework_map["gaps"])) or 0
+    framework_map["gaps"] = _normalize_framework_entries(framework_map.get("gaps", []))
+    framework_map["frameworks_covered"] = _normalize_string_list(
+        framework_map.get("frameworks_covered", [])
+    )
+    framework_map["audit_summary"] = _clean_scalar(framework_map.get("audit_summary", ""))
+
+    framework_map["total_controls_mapped"] = _safe_int(
+        framework_map.get("total_controls_mapped"),
+        default=len(framework_map["mapped_citations"]),
+    )
+    framework_map["total_gaps"] = _safe_int(
+        framework_map.get("total_gaps"),
+        default=len(framework_map["gaps"]),
     )
 
     if not framework_map["audit_summary"]:
@@ -703,6 +869,7 @@ def _parse_framework_map(raw: str, policy_data: dict[str, Any]) -> dict[str, Any
 
 def run_framework_mapping(policy_data: dict[str, Any]) -> dict[str, Any]:
     policy_text = _policy_to_text(policy_data)
+
     if len(policy_text) > MAX_POLICY_ANALYSIS_LEN:
         policy_text = policy_text[:MAX_POLICY_ANALYSIS_LEN]
 
@@ -743,9 +910,9 @@ def build_grc_summary_doc(
     policy_data: dict[str, Any],
     framework_map: dict[str, Any],
 ) -> tuple[str, bytes]:
-    name = policy_data.get("policy_name", "Policy")
-    number = policy_data.get("policy_number", "SEC-P")
-    ver = policy_data.get("version", "V1.0")
+    name = _clean_scalar(policy_data.get("policy_name", "Policy")) or "Policy"
+    number = _clean_scalar(policy_data.get("policy_number", "SEC-P")) or "SEC-P"
+    ver = _clean_scalar(policy_data.get("version", "V1.0")) or "V1.0"
     fname = f"{number} {name} {ver}-GRC-Summary.pdf"
 
     print(f"GRC PDF  |  {name}  |  {number}  |  {ver}")
@@ -753,14 +920,17 @@ def build_grc_summary_doc(
     try:
         from grc_summary_pdf import build_grc_pdf
     except Exception as e:
-        raise RuntimeError(f"[IMPORT ERROR] grc_summary_pdf failed: {e}")
+        raise RuntimeError(f"[IMPORT ERROR] grc_summary_pdf failed: {e}") from e
 
     try:
         pdf_bytes = build_grc_pdf(policy_data, framework_map)
     except Exception as e:
-        raise RuntimeError(f"[PDF ERROR] GRC generation failed: {e}")
+        raise RuntimeError(f"[PDF ERROR] GRC generation failed: {e}") from e
 
-    return fname, pdf_bytes
+    if not isinstance(pdf_bytes, (bytes, bytearray)) or not pdf_bytes:
+        raise RuntimeError("[PDF ERROR] GRC generation returned empty or invalid PDF bytes.")
+
+    return fname, bytes(pdf_bytes)
 
 
 # ── Logo ──────────────────────────────────────────────────────────────────────
@@ -768,11 +938,14 @@ def build_grc_summary_doc(
 def save_logo_bytes(filename: str, file_bytes: bytes) -> str:
     tmp_dir = os.path.join(tempfile.gettempdir(), "midnight_logos")
     os.makedirs(tmp_dir, exist_ok=True)
+
     ext = Path(filename).suffix.lower() or ".png"
     stem = "".join(c for c in Path(filename).stem if c.isalnum() or c in "-_") or "logo"
     path = os.path.join(tmp_dir, f"{stem}_{uuid.uuid4().hex[:8]}{ext}")
+
     with open(path, "wb") as f:
         f.write(file_bytes)
+
     return path
 
 
@@ -782,12 +955,15 @@ def build_output_doc(
     policy_data: dict[str, Any],
     logo_path: str | None = None,
 ) -> tuple[str, bytes]:
-    name = policy_data.get("policy_name", "Policy")
-    number = policy_data.get("policy_number", "POL")
-    ver = policy_data.get("version", "V1.0")
-    template_name = policy_data.get("template_name", "Generic Policy Template")
-    logo_pos = policy_data.get("logo_position", "left")
+    name = _clean_scalar(policy_data.get("policy_name", "Policy")) or "Policy"
+    number = _clean_scalar(policy_data.get("policy_number", "POL")) or "POL"
+    ver = _clean_scalar(policy_data.get("version", "V1.0")) or "V1.0"
+    template_name = _clean_scalar(policy_data.get("template_name", "Generic Policy Template"))
+    logo_pos = _clean_scalar(policy_data.get("logo_position", "left")).lower() or "left"
     fname = f"{number} {name} {ver}-NEW.docx"
+
+    if logo_pos not in {"left", "center", "right"}:
+        logo_pos = "left"
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         tmp_path = tmp.name
@@ -841,6 +1017,9 @@ def build_output_doc(
             os.unlink(tmp_path)
         except Exception:
             pass
+
+    if not doc_bytes:
+        raise RuntimeError("Generated DOCX was empty.")
 
     print(f"BUILD  |  template: {template_name}  |  file: {fname}")
     return fname, doc_bytes
